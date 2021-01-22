@@ -90,7 +90,7 @@ for t_slice in [
     )
     plt.tight_layout()
     plt.savefig(
-        "../plots/historical_trends_"
+        "../plots/maps/historical/historical_trends_"
         + str(t_slice.start)
         + "_"
         + str(t_slice.stop)
@@ -102,6 +102,7 @@ for t_slice in [
 # 10y mean maps
 ref = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
 ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
+# historical
 for t_start in np.arange(1860, 2005, 10):
     ds = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
     t_slice = slice(
@@ -122,14 +123,42 @@ for t_start in np.arange(1860, 2005, 10):
     )
     plt.tight_layout()
     plt.savefig(
-        "../plots/map_windspeeds"
+        "../plots/maps/historical/map_windspeeds"
         + str(t_slice.start)
         + "_"
         + str(t_slice.stop)
         + ".jpeg",
         dpi=300,
     )
-
+# future
+for experiment in ["rcp26", "rcp45", "rcp85"]:
+    for t_start in np.arange(2010, 2100, 10):
+        ds = ann_mean(xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0]))
+        t_slice = slice(
+            str(t_start), str(t_start + 9)
+        )  # slice includes first and last years, so this is a 10y period
+        ds = sel_time(ds, t_slice).mean(dim="time")
+        plt.close("all")
+        ax = plot_field(
+            ds["sfcWind"] - ref["sfcWind"],
+            title=experiment + "\n Diff mean surface wind speed "
+            + t_slice.start
+            + " - "
+            + t_slice.stop
+            + " [m/s]",
+            cmap=cm.get_cmap("RdBu_r"),
+            vmax=2,
+            vmin=-2,
+        )
+        plt.tight_layout()
+        plt.savefig(
+            "../plots/maps/" + experiment + "/map_windspeeds"
+            + str(t_slice.start)
+            + "_"
+            + str(t_slice.stop)
+            + ".jpeg",
+            dpi=300,
+        )
 
 # global mean timeseries
 f, ax = plt.subplots(ncols=2, sharey=True, figsize=(12,6))
