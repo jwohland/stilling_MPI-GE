@@ -1,13 +1,11 @@
 import xarray as xr
-from scipy.stats import linregress
+from scipy.stats import linregress, norm, pearsonr, anderson, kstest
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import norm, pearsonr, anderson, kstest
 from scipy.signal import periodogram
 from pyts.decomposition import SingularSpectrumAnalysis as SSA
-
-# compute trends over 20y locally and globally (and over land)
+import pandas as pd
 
 
 def selbox(ds):
@@ -55,6 +53,15 @@ def calc_frac_partoftrend(y):
     return np.round(y.sum() / (y.size + 19) * 100)
 
 
+def open_datasets(filelist):
+    ds = [ann_mean(selbox(xr.open_dataset(x, use_cftime=True))) for x in filelist]
+    ds = xr.concat(
+        ds,
+        dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
+    )
+    return ds
+
+
 # test frac_partoftrend
 test_array = (
     np.zeros(81) * np.nan
@@ -67,6 +74,7 @@ test_array[4] = 1
 assert calc_frac_partoftrend(test_array) == 41.0 / 100 * 100
 test_array[:] = 2
 assert calc_frac_partoftrend(test_array) == 100.0
+print("Test completed succesfully")
 
 # plot full timeseries and mark trends
 path = "../data/pi-control/"
@@ -110,7 +118,7 @@ plt.savefig("../plots/box_timeseries_picontrol_Europe_slopes.pdf")
 
 # autocorrelation
 f, ax = plt.subplots()
-lags, corrs = np.arange(1,50), []
+lags, corrs = np.arange(1, 50), []
 for lag in lags:
     vals = ds_picontrol["sfcWind"].values
     corrs.append(pearsonr(vals[lag:], vals[:-lag])[0])
@@ -121,7 +129,7 @@ plt.suptitle("Wind autocorrelation Europe pi-control MPI-GE")
 plt.savefig("../plots/sfcWind_autocorrelation.pdf")
 
 # periodogramm
-freq, Pxx =  periodogram(vals)
+freq, Pxx = periodogram(vals)
 f, ax = plt.subplots()
 ax.scatter(freq, Pxx)
 ax.set_xlabel("Frequency [1/y]")
@@ -141,16 +149,23 @@ if (ares.critical_values > ares.statistic).all():
 else:
     title_string = "Anderson says not Gaussian (1% significance level) \n "
 ksres = kstest(ds_picontrol["sfcWind"].values, cdf=norm.cdf)
-title_string += "KS reports p-value of " +str(ksres.pvalue) + " and D=" + str(np.round(ksres.statistic, 1))
+title_string += (
+    "KS reports p-value of "
+    + str(ksres.pvalue)
+    + " and D="
+    + str(np.round(ksres.statistic, 1))
+)
 ax.set_title(title_string)
 ax.set_xlabel("sfcWind [m/s]")
 ax.set_ylabel("PDF")
 plt.savefig("../plots/values_histogram.pdf")
 
 # SSA
-#groups = [np.arange(i, i + 5) for i in range(0, 11, 5)]  # no idea what that does
+# groups = [np.arange(i, i + 5) for i in range(0, 11, 5)]  # no idea what that does
 ssa = SSA(window_size=20)
-X_ssa = ssa.fit_transform(ds_picontrol["sfcWind"].values.reshape(1,-1))  # reshaping needed because ssa expects 2D imput
+X_ssa = ssa.fit_transform(
+    ds_picontrol["sfcWind"].values.reshape(1, -1)
+)  # reshaping needed because ssa expects 2D imput
 f, ax = plt.subplots()
 for i in range(X_ssa.shape[0]):
     ax.plot(X_ssa[i, :], label="SSA " + str(i))
@@ -158,7 +173,8 @@ plt.legend()
 plt.suptitle("SSA analysis of sfcWind Europe, window_size=20")
 plt.savefig("../plots/SSA.pdf")
 
-# plot trend histograms for different p-values
+
+# PI-CONTROL plot trend histograms for different p-values
 for p_threshold in [1, 5, 10, 100]:
     slopes = np.asarray(
         [
@@ -198,4 +214,125 @@ for p_threshold in [1, 5, 10, 100]:
         mu, std = norm.fit(slopes)
         ax.plot(bins, norm.pdf(bins, mu, std), color="red")
 
-    plt.savefig("../plots/historical_wind_trends_Europe_" + str(p_threshold) + ".pdf")
+    plt.savefig("../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".pdf")
+
+
+# trend histograms in other periods
+
+for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
+    path = "../data/" + experiment + "/"
+
+    windfiles = sorted(glob.glob(path + "sfcWind*.nc"))
+    ds = open_datasets(windfiles)
+    ds_ensmean = ann_mean(selbox(xr.open_dataset(glob.glob(path + "ensmean/*.nc")[0])))
+
+    ds_internal = ds - ds_ensmean
+    for p_threshold in [5, 100]:
+        slopes = []
+        for ens_member in ds_internal.ensemble_member:
+            da_internal = ds_internal["sfcWind"].sel({"ensemble_member": ens_member})
+            slopes.extend(
+                [
+                    slope_if_significant(
+                        da_internal[x : x + 20], p_threshold=p_threshold / 100.0
+                    )
+                    for x in range(da_internal.size - 20)
+                ]
+            )
+        slopes = np.asarray(slopes)
+
+        frac_trends = np.round(
+            slopes[np.isfinite(slopes)].size / (da_internal.size - 20) * 100
+        )
+        frac_partoftrend = calc_frac_partoftrend(slopes)
+
+        f, ax = plt.subplots()
+        ax.axvline(x=-0.09, color="purple", label="Vautard et al. [2010]")
+        ax.axvline(x=-0.1, color="orange", label="Zheng et al. [2019] 1978 - 2003")
+        ax.axvline(
+            x=0.1, color="orange", label="Zheng et al. [2019] 2004 - 2017"
+        )  # from SI Fig. 4e visually derived
+
+        n, bins, patches = ax.hist(slopes[np.isfinite(slopes)], bins=50, density=True)
+        ax.set_ylabel("PDF")
+        ax.set_xlabel(
+            "Significant wind speed trends at "
+            + str(100 - p_threshold)
+            + "% level [m/s/decade]"
+        )
+        ax.set_title(
+            experiment
+            + str(frac_trends)
+            + "% of 20y periods feature trends in MPI-GE pi-control \n "
+            + str(frac_partoftrend)
+            + "% of years belong to a 20y trend period"
+        )
+        plt.legend()
+
+        # fit Gaussian to histogram without significance screening
+        if p_threshold == 100:
+            mu, std = norm.fit(slopes)
+            ax.plot(bins, norm.pdf(bins, mu, std), color="red")
+
+        plt.savefig(
+            "../plots/"
+            + str(experiment)
+            + "_wind_trends_Europe_"
+            + str(p_threshold)
+            + ".pdf"
+        )
+
+
+# trend histograms only for ensemble mean
+
+for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
+    path = "../data/" + experiment
+
+    ds_ensmean = ann_mean(selbox(xr.open_dataset(glob.glob(path + "/ensmean/*.nc")[0])))
+
+    for p_threshold in [5, 100]:
+        slopes = np.asarray(
+            [
+                slope_if_significant(
+                    ds_ensmean["sfcWind"][x: x + 20], p_threshold=p_threshold / 100.0
+                )
+                for x in range(ds_ensmean.time.size - 20)
+            ]
+        )
+
+        frac_partoftrend = calc_frac_partoftrend(slopes)
+
+        f, ax = plt.subplots()
+        ax.axvline(x=-0.09, color="purple", label="Vautard et al. [2010]")
+        ax.axvline(x=-0.1, color="orange", label="Zheng et al. [2019] 1978 - 2003")
+        ax.axvline(
+            x=0.1, color="orange", label="Zheng et al. [2019] 2004 - 2017"
+        )  # from SI Fig. 4e visually derived
+
+        n, bins, patches = ax.hist(slopes[np.isfinite(slopes)], bins=50, density=True)
+        ax.set_ylabel("PDF")
+        ax.set_xlabel(
+            "Significant wind speed trends at "
+            + str(100 - p_threshold)
+            + "% level [m/s/decade]"
+        )
+        ax.set_title(
+            experiment
+            + " ensemble mean \n"
+            + str(frac_partoftrend)
+            + "% of years belong to a 20y trend period"
+        )
+        plt.legend()
+
+        # fit Gaussian to histogram without significance screening
+        if p_threshold == 100:
+            mu, std = norm.fit(slopes)
+            ax.plot(bins, norm.pdf(bins, mu, std), color="red")
+
+        plt.savefig(
+            "../plots/"
+            + str(experiment)
+            + "_ensmean_wind_trends_Europe_"
+            + str(p_threshold)
+            + ".pdf"
+        )
