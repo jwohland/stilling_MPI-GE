@@ -1,16 +1,3 @@
-"""
-Compute forested area from LUH1 following the the LUH FAQ (https://luh.umd.edu/faq.shtml, Jan 27th 2021):
-
-You can compute an estimate of the forest area in the Land-Use Harmonization products. 
-For the original LUH products, first you will need to download the forest/non-forest map 
-(fnf_map.txt) and the grid-cell area map (cellarea_halfdeg.txt) in addition to the LUH data 
-packages. 
-The forest area in an individual grid-cell is given by: 
-    (gothr + gsecd)*fnf*cellarea 
-(where gothr and gsecd are the fractions of the grid-cell occupied by primary and secondary land respectively). 
-To compute the global forest area you would sum this quantity over all grid-cells globally.
-"""
-
 import xarray as xr
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -52,18 +39,18 @@ def open_LUH(filename, year=None, name=None):
 
 
 # open constant forest/non-forest map
-da_fnf = open_LUH("fnf_map.txt", name="fnf")
+da_fnf = open_LUH("../data/LUHa.v1/fnf_map.txt", name="fnf")
 # open time varying primary and secondary vegetation maps
 da_gothr = xr.concat(
     [
-        open_LUH("updated_states/gothr." + str(year) + ".txt", year, "gothr")
+        open_LUH("../data/LUHa.v1/updated_states/gothr." + str(year) + ".txt", year, "gothr")
         for year in range(1850, 2000)
     ],
     dim="time",
 )
 da_gsecd = xr.concat(
     [
-        open_LUH("updated_states/gsecd." + str(year) + ".txt", year, "gsecd")
+        open_LUH("../data/LUHa.v1/updated_states/gsecd." + str(year) + ".txt", year, "gsecd")
         for year in range(1850, 2000)
     ],
     dim="time",
@@ -87,7 +74,7 @@ for j, start_year in enumerate([1850, 1890, 1940, 1990]):
 
 
 plt.tight_layout()
-plt.savefig("LUH_absolute.jpeg", dpi=300)
+plt.savefig("../plots/LUH1/LUH_absolute.jpeg", dpi=300)
 
 
 """
@@ -117,4 +104,4 @@ for j, start_year in enumerate([1890, 1940, 1990]):
         )
 
 plt.tight_layout()
-plt.savefig("LUH_change.jpeg", dpi=300)
+plt.savefig("../plots/LUH1/LUH_change.jpeg", dpi=300)
