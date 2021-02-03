@@ -118,7 +118,7 @@ f, ax = plt.subplots(
 
 for i, var in enumerate(["gothr", "gsecd", "gothr+gsecd", "forest"]):
     ref[var].plot(ax=ax[0, i], vmin=0.01, vmax=1.01, levels=11, extend="neither")
-    ax[0, i].set_title(str(start_year) + " to " + str(start_year + 10))
+    ax[0, i].set_title("1850 to 1860")
 
 for j, start_year in enumerate([1890, 1940, 1990]):
     t_slice = slice(str(start_year), str(start_year + 10))
