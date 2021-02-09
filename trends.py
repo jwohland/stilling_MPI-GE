@@ -217,9 +217,9 @@ for p_threshold in [1, 5, 10, 100]:
     plt.savefig("../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".pdf")
 
 
-# trend histograms in other periods
-
+# trend histograms in other periods  # todo unify with pi-control above
 for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
+    print(experiment)
     path = "../data/" + experiment + "/"
 
     windfiles = sorted(glob.glob(path + "sfcWind*.nc"))
@@ -228,6 +228,7 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
 
     ds_internal = ds - ds_ensmean
     for p_threshold in [5, 100]:
+        # calculate trend slopes in individual ens members
         slopes = []
         for ens_member in ds_internal.ensemble_member:
             da_internal = ds_internal["sfcWind"].sel({"ensemble_member": ens_member})
@@ -240,77 +241,53 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
                 ]
             )
         slopes = np.asarray(slopes)
-
         frac_trends = np.round(
             slopes[np.isfinite(slopes)].size / (da_internal.size - 20) * 100
         )
         frac_partoftrend = calc_frac_partoftrend(slopes)
-
-        f, ax = plt.subplots()
-        ax.axvline(x=-0.09, color="purple", label="Vautard et al. [2010]")
-        ax.axvline(x=-0.1, color="orange", label="Zheng et al. [2019] 1978 - 2003")
-        ax.axvline(
-            x=0.1, color="orange", label="Zheng et al. [2019] 2004 - 2017"
-        )  # from SI Fig. 4e visually derived
-
-        n, bins, patches = ax.hist(slopes[np.isfinite(slopes)], bins=50, density=True)
-        ax.set_ylabel("PDF")
-        ax.set_xlabel(
-            "Significant wind speed trends at "
-            + str(100 - p_threshold)
-            + "% level [m/s/decade]"
-        )
-        ax.set_title(
-            experiment
-            + str(frac_trends)
-            + "% of 20y periods feature trends in MPI-GE pi-control \n "
-            + str(frac_partoftrend)
-            + "% of years belong to a 20y trend period"
-        )
-        plt.legend()
-
-        # fit Gaussian to histogram without significance screening
-        if p_threshold == 100:
-            mu, std = norm.fit(slopes)
-            ax.plot(bins, norm.pdf(bins, mu, std), color="red")
-
-        plt.savefig(
-            "../plots/"
-            + str(experiment)
-            + "_wind_trends_Europe_"
-            + str(p_threshold)
-            + ".pdf"
-        )
-
-
-# trend histograms only for ensemble mean
-
-for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
-    path = "../data/" + experiment
-
-    ds_ensmean = ann_mean(selbox(xr.open_dataset(glob.glob(path + "/ensmean/*.nc")[0])))
-
-    for p_threshold in [5, 100]:
-        slopes = np.asarray(
+        # calculate trend slopes in ensemble mean
+        slopes_ensmean = np.asarray(
             [
                 slope_if_significant(
-                    ds_ensmean["sfcWind"][x: x + 20], p_threshold=p_threshold / 100.0
+                    ds_ensmean["sfcWind"][x : x + 20], p_threshold=p_threshold / 100.0
                 )
                 for x in range(ds_ensmean.time.size - 20)
             ]
         )
 
-        frac_partoftrend = calc_frac_partoftrend(slopes)
-
+        # plotting
         f, ax = plt.subplots()
-        ax.axvline(x=-0.09, color="purple", label="Vautard et al. [2010]")
-        ax.axvline(x=-0.1, color="orange", label="Zheng et al. [2019] 1978 - 2003")
-        ax.axvline(
-            x=0.1, color="orange", label="Zheng et al. [2019] 2004 - 2017"
-        )  # from SI Fig. 4e visually derived
-
-        n, bins, patches = ax.hist(slopes[np.isfinite(slopes)], bins=50, density=True)
-        ax.set_ylabel("PDF")
+        ax2 = ax.twinx()
+        n, bins, patches = ax.hist(
+            slopes[np.isfinite(slopes)],
+            bins=50,
+            density=True,
+            color="darkorange",
+            alpha=0.7,
+            label="ensemble members"
+        )
+        ax.axvline(x=-0.09, color="purple", ls="--")
+        textdic = {
+            "horizontalalignment": "center",
+            "verticalalignment": "center",
+            "rotation": 90,
+            "fontsize": 8,
+        }
+        ax.text(-0.083, n.max() *3./4, "Vautard et al. [2010]", textdic)
+        ax.axvline(x=-0.1, color="purple", ls="--")
+        ax.text(-0.107, n.max() *3./4, "Zheng et al. [2019] 1978 - 2003", textdic)
+        ax.axvline(x=0.1, color="purple", ls="--")  # from SI Fig. 4e visually derived
+        ax.text(0.093, n.max() *3./4, "Zheng et al. [2019] 2004 - 2017", textdic)
+        ax2.hist(
+            slopes_ensmean[np.isfinite(slopes_ensmean)],
+            bins=50,
+            density=True,
+            color="darkgreen",
+            alpha=0.7,
+            label="ensemble mean"
+        )
+        ax.set_ylabel("PDF ensemble members", color="darkorange")
+        ax2.set_ylabel("PDF ensemble mean", color="darkgreen")
         ax.set_xlabel(
             "Significant wind speed trends at "
             + str(100 - p_threshold)
@@ -318,21 +295,20 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
         )
         ax.set_title(
             experiment
-            + " ensemble mean \n"
+            + ": "
             + str(frac_partoftrend)
             + "% of years belong to a 20y trend period"
         )
-        plt.legend()
-
         # fit Gaussian to histogram without significance screening
         if p_threshold == 100:
             mu, std = norm.fit(slopes)
             ax.plot(bins, norm.pdf(bins, mu, std), color="red")
-
+        plt.tight_layout()
         plt.savefig(
             "../plots/"
             + str(experiment)
-            + "_ensmean_wind_trends_Europe_"
+            + "_wind_trends_Europe_"
             + str(p_threshold)
-            + ".pdf"
+            + "_all.jpeg",
+            dpi=300,
         )
