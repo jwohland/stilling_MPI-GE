@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import warnings
+import numpy as np
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
@@ -150,7 +151,7 @@ cbar2_ax = f.add_axes([0.8, 0.08, 0.175, 0.02])
 
 for row, experiment in enumerate(ds_dict.keys()):
     plt.text(
-        -.1,
+        -0.1,
         0.5,
         experiment,
         rotation=90,
@@ -169,7 +170,10 @@ for row, experiment in enumerate(ds_dict.keys()):
                 cbar_ax=cbar1_ax,
                 extend="both",
                 cmap=cm.get_cmap("RdBu_r"),
-                cbar_kwargs={"orientation": "horizontal", "label": "Difference in decadal mean wind speed [m/s]"},
+                cbar_kwargs={
+                    "orientation": "horizontal",
+                    "label": "Difference in decadal mean wind speed [m/s]",
+                },
             )
         else:
             if field != "LUH Diff":
@@ -190,16 +194,19 @@ for row, experiment in enumerate(ds_dict.keys()):
                     cbar_ax=cbar2_ax,
                     extend="both",
                     cmap=cm.get_cmap("RdBu"),
-                    cbar_kwargs={"orientation": "horizontal", "label": "Difference in primary \n plus secondary land"},
+                    cbar_kwargs={
+                        "orientation": "horizontal",
+                        "label": "Difference in primary \n plus secondary land",
+                    },
                 )
 
 for tmp_ax in ax.flatten():
     tmp_ax.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
     tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
-ax[0,0].set_title(r"Full change $\Delta s$")
-ax[0,1].set_title(r"Dynamical change $\Delta_{dyn} s$")
-ax[0,2].set_title(r"Full minus dynamical $\Delta s - \Delta_{dyn} s$")
-ax[0,3].set_title(r"Land use change")
+ax[0, 0].set_title(r"Full change $\Delta s$")
+ax[0, 1].set_title(r"Dynamical change $\Delta_{dyn} s$")
+ax[0, 2].set_title(r"Full minus dynamical $\Delta s - \Delta_{dyn} s$")
+ax[0, 3].set_title(r"Land use change")
 
 
 plt.subplots_adjust(0.04, 0.1, 0.99, 0.96)
@@ -208,14 +215,39 @@ plt.savefig("../plots/attribution_maps.jpeg", dpi=300)
 """
 The following is under construction!!!
 """
-# scatter plots
+# compare onshore pdfs
+landmask = xr.open_dataarray("../data/runoff/landmask.nc")
+colors = ["Orange", "Olive"]
+f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 10))
+for row, experiment in enumerate(ds_dict.keys()):
+    for i, var in enumerate(["Full - Dyn.", "Dyn. Diff"]):
+        tmp_da = ds_dict[experiment][var]["sfcWind"]
+        tmp_da = tmp_da.where(np.isfinite(landmask)).values
+        ax[row].hist(
+            tmp_da[np.isfinite(tmp_da)],
+            label=var,
+            density=True,
+            bins=100,
+            alpha=0.7,
+            color=colors[i],
+        )
+        ax[row].axvline(tmp_da[np.isfinite(tmp_da)].mean(), ls="--", color=colors[i])
+    ax[row].set_ylabel(experiment + " PDF")
+    ax[row].set_xlim(xmin=-1, xmax=1)
+ax[0].legend()
+ax[3].set_xlabel("Wind speed change [m/s]")
+plt.tight_layout()
+plt.savefig("../plots/contribution_histograms.jpeg", dpi=300)
+
+
 for lu_variable in ["gothr", "gsecd", "gothr+gsecd"]:
     f, ax = plt.subplots(nrows=4, sharex=True)
     for row, experiment in enumerate(ds_dict.keys()):
         x = ds_dict[experiment]["LUH Diff"][lu_variable]
-        x = x.assign_coords(lon=(x.lon + 180).sortby('lon'))
+        x = x.assign_coords(lon=(x.lon + 180).sortby("lon"))
         y = ds_dict[experiment]["Full - Dyn."]["sfcWind"]
         y_int = y.interp(lat=x.lat, lon=x.lon, method="linear")
-        ax[row].scatter(x.values.flatten(), y_int.values.flatten())  # todo needs resampling!!!
+        ax[row].scatter(
+            x.values.flatten(), y_int.values.flatten()
+        )  # todo needs resampling!!!
     plt.savefig("../plots/test_remap.jpeg", dpi=300)
-
