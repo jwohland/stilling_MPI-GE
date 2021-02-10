@@ -212,9 +212,6 @@ ax[0, 3].set_title(r"Land use change")
 plt.subplots_adjust(0.04, 0.1, 0.99, 0.96)
 plt.savefig("../plots/attribution_maps.jpeg", dpi=300)
 
-"""
-The following is under construction!!!
-"""
 # compare onshore pdfs
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
 colors = ["Orange", "Olive"]
@@ -240,14 +237,61 @@ plt.tight_layout()
 plt.savefig("../plots/contribution_histograms.jpeg", dpi=300)
 
 
-for lu_variable in ["gothr", "gsecd", "gothr+gsecd"]:
-    f, ax = plt.subplots(nrows=4, sharex=True)
-    for row, experiment in enumerate(ds_dict.keys()):
-        x = ds_dict[experiment]["LUH Diff"][lu_variable]
-        x = x.assign_coords(lon=(x.lon + 180).sortby("lon"))
-        y = ds_dict[experiment]["Full - Dyn."]["sfcWind"]
-        y_int = y.interp(lat=x.lat, lon=x.lon, method="linear")
-        ax[row].scatter(
-            x.values.flatten(), y_int.values.flatten()
-        )  # todo needs resampling!!!
-    plt.savefig("../plots/test_remap.jpeg", dpi=300)
+"""
+The following is under construction!!!
+"""
+from scipy.stats import spearmanr, pearsonr
+
+
+def quantile(da, q):
+    tmp = da.values
+    tmp = tmp[np.isfinite(tmp)]
+    return np.quantile(tmp, q)
+
+for lu_variable in ["gothr+gsecd", "gothr", "gsecd"]:
+    print(lu_variable)
+    for wind_type in ["abs", "rel"]:
+        for analysis_type in ["all", "hotspots"]:  # hotspots only considers locations with large wind speed changes
+            f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 10))
+            for row, experiment in enumerate(ds_dict.keys()):
+                ds_lu = ds_dict[experiment]["LUH Diff"][lu_variable]
+                # land use lons cover -180 ... 180, tranform to 0 ... 360
+                ds_lu = ds_lu.assign_coords(lon=((ds_lu.lon + 360) % 360).sortby("lon"))
+                ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"]
+                if wind_type == ref:
+                    ds_wind /= ref["sfcWind"]
+                ds_wind_int = ds_wind.interp(lat=ds_lu.lat, lon=ds_lu.lon, method="linear")  # todo maybe one should aggregate the high resoltion land use data rather than interpolate the lower resoltion wind
+
+                # exclude grid boxes where land use change is exactly zero (i.e., oceans and non-used lands)
+                x = ds_lu.where(ds_lu != 0)
+                y = ds_wind_int.where(ds_lu != 0)
+
+                if analysis_type == "all":
+                    # exclude grid boxes where ds_wind_int is nan # todo understand why (remapping?)
+                    x = x.where(np.isfinite(ds_wind_int))
+                    y = y.where(np.isfinite(ds_wind_int))
+                else:
+                    wind_threshold = quantile(ds_wind_int, 0.95)
+                    x = x.where(ds_wind_int > wind_threshold)
+                    y = y.where(ds_wind_int > wind_threshold)
+
+                # drop nans
+                x, y = x.values, y.values
+                x = x[np.isfinite(x)]
+                y = y[np.isfinite(y)]
+                ax[row].scatter(
+                    x,
+                    y,
+                    s=5,
+                    alpha=0.5,
+                    label="R = "
+                    + str(np.round(pearsonr(x, y)[0], 2))
+                    + "\n Spearman Rho = "
+                    + str(np.round(spearmanr(x, y)[0], 2))
+                )
+                ax[row].set_ylabel("Wind speed change [m/s]")
+                ax[row].legend()
+            ax[3].set_xlabel("Land use change")
+            plt.tight_layout()
+            plt.savefig("../plots/scatter_" + analysis_type + "_" + lu_variable + "_" + wind_type + ".jpeg", dpi=300)
+            plt.close("all")
