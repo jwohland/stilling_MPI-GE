@@ -7,6 +7,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import warnings
 import numpy as np
+import pickle
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
@@ -102,40 +103,46 @@ ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
 ds_stylized = ann_mean(xr.open_dataset(glob.glob("../data/1pCO2/ensmean/*.nc")[0]))
 LUH_ref = open_LUH_period("../data/LUHa.v1/", 1850, 1860).mean(dim="time")
 
-ds_dict = {}
-for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
-    ds_dict[experiment] = {}
-    ds_tmp = (
-        ann_mean(
-            xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
+try:
+    with open('../output/attribution_maps.pickle', 'rb') as handle:
+        ds_dict = pickle.load(handle)
+except FileNotFoundError:
+    ds_dict = {}
+    for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
+        ds_dict[experiment] = {}
+        ds_tmp = (
+            ann_mean(
+                xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
+            )
+            .sel({"time": slice_dic[experiment]["end"]})
+            .mean(dim="time")
         )
-        .sel({"time": slice_dic[experiment]["end"]})
-        .mean(dim="time")
-    )
-    ds_dict[experiment]["Full Diff"] = (
-        ds_tmp - ref
-    )  # full (dynamical + land use) difference
-    ds_dict[experiment]["Dyn. Diff"] = (
-        ds_stylized.sel({"time": slice_dic[experiment]["equiv"]}).mean(dim="time") - ref
-    )  # only CO2 forcing
-    ds_dict[experiment]["Full - Dyn."] = (
-        ds_dict[experiment]["Full Diff"] - ds_dict[experiment]["Dyn. Diff"]
-    )
-    path = "../data/LUHa.v1/"
-    if experiment == "rcp26":
-        path += "IMAGE_rcp26/"
-    elif experiment == "rcp45":
-        path += "MiniCAM_rcp45/"
-    elif experiment == "rcp85":
-        path += "MESSAGE_rcp85/"
-    ds_dict[experiment]["LUH Diff"] = (
-        open_LUH_period(
-            path,
-            int(slice_dic[experiment]["end"].start),
-            int(slice_dic[experiment]["end"].stop),
-        ).mean(dim="time")
-        - LUH_ref
-    )
+        ds_dict[experiment]["Full Diff"] = (
+            ds_tmp - ref
+        )  # full (dynamical + land use) difference
+        ds_dict[experiment]["Dyn. Diff"] = (
+            ds_stylized.sel({"time": slice_dic[experiment]["equiv"]}).mean(dim="time") - ref
+        )  # only CO2 forcing
+        ds_dict[experiment]["Full - Dyn."] = (
+            ds_dict[experiment]["Full Diff"] - ds_dict[experiment]["Dyn. Diff"]
+        )
+        path = "../data/LUHa.v1/"
+        if experiment == "rcp26":
+            path += "IMAGE_rcp26/"
+        elif experiment == "rcp45":
+            path += "MiniCAM_rcp45/"
+        elif experiment == "rcp85":
+            path += "MESSAGE_rcp85/"
+        ds_dict[experiment]["LUH Diff"] = (
+            open_LUH_period(
+                path,
+                int(slice_dic[experiment]["end"].start),
+                int(slice_dic[experiment]["end"].stop),
+            ).mean(dim="time")
+            - LUH_ref
+        )
+        with open('../output/attribution_maps.pickle', 'wb') as handle:
+            pickle.dump(ds_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # prep Figure
 f, ax = plt.subplots(
@@ -257,7 +264,7 @@ for lu_variable in ["gothr+gsecd", "gothr", "gsecd"]:
                 ds_lu = ds_dict[experiment]["LUH Diff"][lu_variable]
                 # land use lons cover -180 ... 180, tranform to 0 ... 360
                 ds_lu = ds_lu.assign_coords(lon=((ds_lu.lon + 360) % 360).sortby("lon"))
-                ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"]
+                ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"].copy()
                 if wind_type == ref:
                     ds_wind /= ref["sfcWind"]
                 ds_wind_int = ds_wind.interp(lat=ds_lu.lat, lon=ds_lu.lon, method="linear")  # todo maybe one should aggregate the high resoltion land use data rather than interpolate the lower resoltion wind
