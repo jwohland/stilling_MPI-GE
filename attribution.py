@@ -257,6 +257,25 @@ def quantile(da, q):
     return np.quantile(tmp, q)
 
 
+def count_quadrant(x, y):
+    """
+    count the number of occurences of
+        x > 0 and
+    :param x:
+    :param y:
+    :return:
+    """
+
+
+def conditional_prob(x,y,x_thr):
+    joint_prob = y[(x>x_thr) & (y < 0)].size
+    single_prob = y[x>x_thr].size
+    if single_prob == 0:
+        cond_prob = 0
+    else:
+        cond_prob = joint_prob/single_prob
+    return cond_prob
+
 lu_variable = "gothr+gsecd"
 # todo maybe do masking differently and split by geographic area?
 for wind_type in ["abs", "rel"]:
@@ -264,13 +283,13 @@ for wind_type in ["abs", "rel"]:
         "all",
         "hotspots",
     ]:  # hotspots only considers locations with large wind speed changes
-        f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 10))
+        f, ax = plt.subplots(nrows=4, sharex=True, sharey=True, figsize=(4, 10))
         for row, experiment in enumerate(ds_dict.keys()):
             ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"].copy()
             if wind_type == "rel":
                 ds_wind /= ref["sfcWind"]
 
-            ds_lu = ds_dict[experiment]["LUH Diff"][lu_variable]
+            ds_lu = ds_dict[experiment]["LUH Diff"][lu_variable].copy()
             # land use lons cover -180 ... 180, tranform to 0 ... 360
             ds_lu = ds_lu.assign_coords(lon=((ds_lu.lon + 360) % 360)).sortby("lon")
             # aggregate land use data to similar resolution (2x2 degrees compared to 1.875x1.875)
@@ -280,15 +299,13 @@ for wind_type in ["abs", "rel"]:
                 .coarsen(lon=4, boundary="trim")
                 .mean()
             )
-            ds_lu_int = ds_lu.interp(
-                lat=ds_wind.lat, lon=ds_wind.lon, method="linear"
-            )
+            ds_lu_int = ds_lu.interp(lat=ds_wind.lat, lon=ds_wind.lon, method="linear")
             ds_lu_int[
                 :, 0
             ] = 0  # todo improve this ugly fix. Maybe using xEMSF? Without specifying fill_value=0, nans are added at lon=0 because interpolation doesn't understand periodicity
             # exclude grid boxes where land use change is exactly zero (i.e., oceans and non-used lands)
-            x = ds_lu_int.where(np.abs(ds_lu_int)>0.01)
-            y = ds_wind.where(np.abs(ds_lu_int)>0.01)
+            y = ds_lu_int.where(np.abs(ds_lu_int) > 0.01)
+            x = ds_wind.where(np.abs(ds_lu_int) > 0.01)
 
             if analysis_type == "hotspots":
                 wind_threshold = quantile(ds_wind, 0.95)
@@ -300,18 +317,45 @@ for wind_type in ["abs", "rel"]:
             x = x[np.isfinite(x)]
             y = y[np.isfinite(y)]
             ax[row].scatter(
-                y,
                 x,
+                y,
                 s=5,
                 alpha=0.3,
                 label="R = "
                 + str(np.round(pearsonr(x, y)[0], 2))
-                + "\n Spearman Rho = "
+                + "\n"
+                + r"$\rho$ = "
                 + str(np.round(spearmanr(x, y)[0], 2)),
             )
             ax[row].set_ylabel("Land use change")
-            ax[row].legend()
-        ax[3].set_xlim(xmin=-0.5, xmax=2)
+            ax[row].axhline(0, ls="--", color="Orange", alpha=0.7)
+            ax[row].axvline(0, ls="--", color="Orange", alpha=0.7)
+
+            # add occurence percentage of all four quadrants
+            q1 = int(np.round(y[(x < 0) & (y > 0)].size / y.size * 100))
+            q2 = int(np.round(y[(x > 0) & (y > 0)].size / y.size * 100))
+            q3 = int(np.round(y[(x > 0) & (y < 0)].size / y.size * 100))
+            q4 = int(np.round(y[(x < 0) & (y < 0)].size / y.size * 100))
+
+            ax[row].text(
+                -1, 0.2, str(q1) + "%", color="Darkorange", ha="center", va="center"
+            )
+            ax[row].text(
+                2.5, 0.2, str(q2) + "%", color="Darkorange", ha="center", va="center"
+            )
+            ax[row].text(
+                2.5, -0.2, str(q3) + "%", color="Darkorange", ha="center", va="center"
+            )
+            ax[row].text(
+                -1, -0.2, str(q4) + "%", color="Darkorange", ha="center", va="center"
+            )
+            ax[row].legend(loc="upper right", markerscale=0)
+
+            # add conditional probability
+            ax2 = ax[row].twinx()
+            ys = [ conditional_prob(x,y,x_thr=x_thr) for x_thr in np.arange(-1,2, .1)]
+            ax2.plot(np.arange(-1,2, .1), ys, color="Purple")
+        # ax[3].set_xlim(xmin=-0.5, xmax=2)
         ax[3].set_xlabel("Wind speed change [m/s]")
         plt.tight_layout()
         plt.savefig(
