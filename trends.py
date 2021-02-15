@@ -95,26 +95,25 @@ slopes_ts = xr.DataArray(
     slopes, dims="time", coords={"time": ds_picontrol["sfcWind"].time[:1980]}
 )
 
-f, ax = plt.subplots(figsize=(26, 8))
-ds_picontrol["sfcWind"].plot(ax=ax, alpha=0.5)
-ds_picontrol["sfcWind"].rolling(time=10, center=True).mean().dropna(dim="time").plot(
-    ax=ax, color="grey"
-)
+f, ax = plt.subplots(figsize=(12, 5))
+ds_picontrol["sfcWind"].plot(ax=ax, alpha=0.5, label="Annual mean")
 ds_picontrol["sfcWind"].rolling(time=20, center=True).mean().dropna(dim="time").plot(
-    ax=ax, color="black"
+    ax=ax, color="black", label="20y mean"
 )
-
 ds_picontrol["sfcWind"].where(slopes_ts > 0).plot.line(
-    marker="o", linewidth=0, color="red", alpha=0.8, label="onset upward"
+    marker="o", linewidth=0, color="red", alpha=0.7, label="onset upward trend"
 )
 ds_picontrol["sfcWind"].where(slopes_ts < 0).plot.line(
-    marker="o", linewidth=0, color="green", alpha=0.8, label="onset_downward"
+    marker="o", linewidth=0, color="green", alpha=0.7, label="onset downward trend"
 )
-plt.legend()
-plt.ylabel("Wind speed [m/s]")
-plt.title("MPI-GE PI control,Europe ")
+ax.legend(loc="upper right", ncol=4)
+ax.set_xlabel("Year of pi-control simulation", fontsize=12)
+ax.set_ylabel("European mean wind speed [m/s]", fontsize=12)
+ax.set_title("")
+ax.set_ylim(ymax=5.4)
+ax.set_xlim(xmin=ds_picontrol.time[0].values, xmax=ds_picontrol.time[-1].values)
 plt.tight_layout()
-plt.savefig("../plots/box_timeseries_picontrol_Europe_slopes.pdf")
+plt.savefig("../plots/timeseries_picontrol_Europe.jpeg", dpi=300)
 
 # autocorrelation
 f, ax = plt.subplots()
