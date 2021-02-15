@@ -267,19 +267,19 @@ def count_quadrant(x, y):
     """
 
 
-def conditional_prob(x,y,x_thr):
-    joint_prob = y[(x>x_thr) & (y < 0)].size
-    single_prob = y[x>x_thr].size
+def conditional_prob(x, y, x_thr):
+    joint_prob = y[(x > x_thr) & (y < 0)].size
+    single_prob = y[x > x_thr].size
     if single_prob == 0:
         cond_prob = 0
     else:
-        cond_prob = joint_prob/single_prob
+        cond_prob = joint_prob / single_prob
     return cond_prob
 
 
 lu_variable = "gothr+gsecd"
 for wind_type in ["abs", "rel"]:
-    f, ax = plt.subplots(nrows=4, sharex=True, sharey=True, figsize=(4, 10))
+    f, ax = plt.subplots(nrows=4, sharex=True, sharey=True, figsize=(5, 10))
     for row, experiment in enumerate(ds_dict.keys()):
         ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"].copy()
         if wind_type == "rel":
@@ -344,17 +344,22 @@ for wind_type in ["abs", "rel"]:
 
         # add conditional probability
         ax2 = ax[row].twinx()
-        ys = [ conditional_prob(x,y,x_thr=x_thr) for x_thr in np.arange(-1,2, .1)]
-        ax2.plot(np.arange(-1,2, .1), ys, color="Purple")
+        ys = [
+            conditional_prob(x, y, x_thr=x_thr) * 100 for x_thr in np.arange(0, 2, 0.1)
+        ]
+        ax2.plot(np.arange(0, 2, 0.1), ys, color="Purple")
+        ax2.set_ylabel("cond. prob. luc <0 [%]", color="Purple")
+        ax2.set_ylim(ymin=95, ymax=107)
+        ax2.set_yticks([96, 98, 100])
+        [t.set_color("Purple") for t in ax2.yaxis.get_ticklines()]
+        [t.set_color("Purple") for t in ax2.yaxis.get_ticklabels()]
     # ax[3].set_xlim(xmin=-0.5, xmax=2)
-    ax[3].set_xlabel("Wind speed change [m/s]")
+    if wind_type == "abs":
+        ax[3].set_xlabel("Wind speed change [m/s]")
+    else:
+        ax[3].set_xlabel("Relative wind speed change [1]")
     plt.tight_layout()
     plt.savefig(
-        "../plots/scatter/scatter_"
-        + lu_variable
-        + "_"
-        + wind_type
-        + ".jpeg",
-        dpi=300,
+        "../plots/scatter/scatter_" + lu_variable + "_" + wind_type + ".jpeg", dpi=300,
     )
     plt.close("all")
