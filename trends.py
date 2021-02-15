@@ -160,19 +160,6 @@ ax.set_xlabel("sfcWind [m/s]")
 ax.set_ylabel("PDF")
 plt.savefig("../plots/values_histogram.pdf")
 
-# SSA
-# groups = [np.arange(i, i + 5) for i in range(0, 11, 5)]  # no idea what that does
-ssa = SSA(window_size=20)
-X_ssa = ssa.fit_transform(
-    ds_picontrol["sfcWind"].values.reshape(1, -1)
-)  # reshaping needed because ssa expects 2D imput
-f, ax = plt.subplots()
-for i in range(X_ssa.shape[0]):
-    ax.plot(X_ssa[i, :], label="SSA " + str(i))
-plt.legend()
-plt.suptitle("SSA analysis of sfcWind Europe, window_size=20")
-plt.savefig("../plots/SSA.pdf")
-
 
 # PI-CONTROL plot trend histograms for different p-values
 for p_threshold in [1, 5, 10, 100]:
