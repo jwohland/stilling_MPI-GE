@@ -264,7 +264,7 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
         # plotting
         f, ax = plt.subplots()
         ax2 = ax.twinx()
-        plot_histo(slopes, ax, experiment)
+        bins = plot_histo(slopes, ax, experiment)
         ax2.hist(
             slopes_ensmean[np.isfinite(slopes_ensmean)],
             bins=50,
