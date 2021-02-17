@@ -162,16 +162,20 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
         )
 
 # global mean timeseries
-f, ax = plt.subplots(ncols=2, sharey=True, figsize=(12,6))
+# prep data
+landmask = xr.open_dataarray("../data/runoff/landmask.nc")
 ds_list = [
     ann_mean(xr.open_dataset(x, use_cftime=True))
     for x in sorted(glob.glob("../data/pi-control/*.nc"))
 ]
 # use_cftime needed after 2200. Otherwise SerializationWarning is raised
 ds_picontrol = xr.concat(ds_list, dim="time")
-ds_picontrol = ds_picontrol.mean(dim=["lat", "lon"])
+onshore_mean = ds_picontrol.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
+
+# plotting
+f, ax = plt.subplots(ncols=2, sharey=True, figsize=(8,4), gridspec_kw={'width_ratios': [1, 2]})
 ax[0].hist(
-    ds_picontrol["sfcWind"].values,
+    onshore_mean["sfcWind"].values,
     bins=200,
     orientation="horizontal",
     density=True,
@@ -179,18 +183,28 @@ ax[0].hist(
     color="black",
     alpha=0.5,
 )
-ax[0].legend()
+ax[0].legend(loc="lower left")
 ax[0].set_xlabel("PDF")
 
 for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
     ds = ann_mean(
         xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
     )
-    ds = ds.mean(dim=["lat", "lon"])
+    ds = ds.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
     ds["sfcWind"].plot(ax=ax[1], label=experiment)
-ax[0].set_ylabel("Global mean 10m wind speed [m/s]")
-ax[1].legend()
+ax[0].set_ylabel("Global mean onshore 10m wind speed [m/s]")
+ax[1].legend(loc="lower left")
 ax[1].set_ylabel("")
+ax[1].set_xlabel("")
+
+
+# add max & min lines for pi-control
+for i in range(2):
+    ax[i].axhline(onshore_mean["sfcWind"].min().values, ls="--", color="black", alpha=.5)
+    ax[i].axhline(onshore_mean["sfcWind"].max().values, ls="--", color="black", alpha=.5)
+ax[0].text(x=20, y=onshore_mean["sfcWind"].min().values + 0.01, s="Minimum", ha="center", va="center")
+ax[0].text(x=20, y=onshore_mean["sfcWind"].max().values + 0.01, s="Maximum", ha="center", va="center")
+
 plt.tight_layout()
 plt.savefig(
     "../plots/global_windspeeds.jpeg", dpi=300,
