@@ -77,6 +77,7 @@ def open_LUH_period(path, ts, te):
 da_fnf = open_LUH("../data/LUHa.v1/fnf_map.txt", name="fnf")
 # open time varying fields
 ds = open_LUH_period("../data/LUHa.v1/", 1850, 2000)
+ref = ds.sel({"time": slice("1850", "1860")}).mean(dim="time")
 
 """
 plot absolute values
@@ -106,7 +107,6 @@ plt.savefig("../plots/LUH1/LUH_absolute.jpeg", dpi=300)
 """
 plot ref and changes to ref
 """
-ref = ds.sel({"time": slice("1850", "1860")}).mean(dim="time")
 f, ax = plt.subplots(
     ncols=4,
     nrows=4,
@@ -147,61 +147,54 @@ plt.savefig("../plots/LUH1/LUH_change.jpeg", dpi=300)
 plot ref and changes to ref in the future
 """
 
-f, ax = plt.subplots(
-    ncols=4,
-    nrows=3,
-    figsize=(12, 8),
-    sharex=True,
-    sharey=True,
-    subplot_kw={"projection": ccrs.PlateCarree()},
-)
-cbar_ax = f.add_axes([0.2, 0.08, 0.6, 0.02])
-
 ref_end = ds.sel({"time": slice("1990", "2000")}).mean(dim="time")  # 2nd reference scenario end of 20th century
 
 for i_ref, reference_data in enumerate([ref, ref_end]):
+    f, ax = plt.subplots(
+        ncols=3,
+        figsize=(8, 2.3),
+        sharex=True,
+        sharey=True,
+        subplot_kw={"projection": ccrs.PlateCarree()},
+    )
+    cbar_ax = f.add_axes([0.2, 0.19, 0.6, 0.04])
+
+    if i_ref == 0:
+        vmax=1
+    else:
+        vmax=.5
     for j, experiment in enumerate(["IMAGE_rcp26", "MiniCAM_rcp45", "MESSAGE_rcp85"]):
         print(experiment)
         ds_future = open_LUH_period("../data/LUHa.v1/" + experiment + "/", 2090, 2100)
         diff = ds_future.sel({"time": slice("2090", "2100")}).mean(dim="time") - reference_data
-        for i, var in enumerate(["gothr", "gsecd", "gothr+gsecd", "forest"]):
-            if i + j != 0:
-                diff[var].plot(
-                    ax=ax[j, i],
-                    vmin=-1,
-                    vmax=1,
-                    add_colorbar=False,
-                    extend="neither",
-                    cmap=cm.get_cmap("RdBu_r"),
-                )
-            else:
-                diff[var].plot(
-                    ax=ax[j, i],
-                    vmin=-1,
-                    vmax=1,
-                    add_colorbar=True,
-                    cbar_ax=cbar_ax,
-                    extend="neither",
-                    cmap=cm.get_cmap("RdBu_r"),
-                    cbar_kwargs={"orientation": "horizontal", "label": ""},
-                )
-            ax[j, i].set_title(var)
-        plt.text(
-            0,
-            1.4,
-            experiment,
-            fontdict={"fontsize": 15},
-            horizontalalignment="left",
-            verticalalignment="center",
-            transform=ax[j, 0].transAxes,
-        )
 
-        # ax[j, 0].set_yaxis(experiment)
+        var = "gothr+gsecd"
+        if j != 0:
+            diff[var].plot(
+                ax=ax[j],
+                vmin=-vmax,
+                vmax=vmax,
+                add_colorbar=False,
+                extend="both",
+                cmap=cm.get_cmap("RdBu"),
+            )
+        else:
+            diff[var].plot(
+                ax=ax[j],
+                vmin=-vmax,
+                vmax=vmax,
+                add_colorbar=True,
+                cbar_ax=cbar_ax,
+                extend="both",
+                cmap=cm.get_cmap("RdBu"),
+                cbar_kwargs={"orientation": "horizontal", "label": "Difference in primary plus secondary land"},
+            )
+        ax[j].set_title(experiment)
 
     for tmp_ax in ax.flatten():
         tmp_ax.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
         tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
-    plt.subplots_adjust(0.01, 0.1, 0.99, 0.96)
+    plt.subplots_adjust(0.01, 0.12, 0.99, 0.99)
     if i_ref == 0:
         plt.savefig("../plots/LUH1/LUH_change_future.jpeg", dpi=300)
     else:
