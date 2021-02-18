@@ -61,6 +61,46 @@ def open_datasets(filelist):
     return ds
 
 
+def plot_histo(slopes, ax, experiment, full_output=False, bins=50):
+    n, bins, patches = ax.hist(
+        slopes[np.isfinite(slopes)],
+        bins=bins,
+        density=True,
+        color="darkorange",
+        alpha=0.7,
+        label="ensemble members",  # todo I believe this line is no longer needed
+    )
+    ax.set_xlim(xmin=-0.2, xmax=0.2)
+    textdic = {
+        "horizontalalignment": "center",
+        "verticalalignment": "center",
+        "rotation": 90,
+        "fontsize": 8,
+    }
+    ax.axvline(x=-0.09, color="purple", ls="--")  # p.1, 2nd column, 1st paragraph
+    ax.text(-0.083, n.max() * 3.0 / 4, "Vautard et al. [2010] 1979 - 2008", textdic)
+    ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
+    ax.text(-0.107, n.max() * 3.0 / 4, "Zheng et al. [2019] 1978 - 2003", textdic)
+    ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
+    ax.text(0.103, n.max() * 3.0 / 4, "Zheng et al. [2019] 2004 - 2017", textdic)
+    frac_partoftrend = calc_frac_partoftrend(slopes)
+    ax.set_xlabel(
+        "Significant wind speed trends at "
+        + str(100 - p_threshold)
+        + "% level [m/s/decade]"
+    )
+    ax.set_title(
+        experiment
+        + ": "
+        + str(int(frac_partoftrend))
+        + "% of years belong to a 20y trend period"
+    )
+    if full_output:
+        return n, bins
+    else:
+        return bins
+
+
 # test frac_partoftrend
 test_array = (
     np.zeros(81) * np.nan
@@ -162,42 +202,6 @@ plt.savefig("../plots/values_histogram.pdf")
 """
 Plot trend histograms
 """
-def plot_histo(slopes, ax, experiment):
-    n, bins, patches = ax.hist(
-        slopes[np.isfinite(slopes)],
-        bins=50,
-        density=True,
-        color="darkorange",
-        alpha=0.7,
-        label="ensemble members"
-    )
-    ax.set_xlim(xmin=-0.2, xmax=.2)
-    textdic = {
-        "horizontalalignment": "center",
-        "verticalalignment": "center",
-        "rotation": 90,
-        "fontsize": 8,
-    }
-    ax.axvline(x=-0.09, color="purple", ls="--")   # p.1, 2nd column, 1st paragraph
-    ax.text(-0.083, n.max() * 3. / 4, "Vautard et al. [2010] 1979 - 2008", textdic)
-    ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
-    ax.text(-0.107, n.max() * 3. / 4, "Zheng et al. [2019] 1978 - 2003", textdic)
-    ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
-    ax.text(0.103, n.max() * 3. / 4, "Zheng et al. [2019] 2004 - 2017", textdic)
-    frac_partoftrend = calc_frac_partoftrend(slopes)
-    ax.set_xlabel(
-        "Significant wind speed trends at "
-        + str(100 - p_threshold)
-        + "% level [m/s/decade]"
-    )
-    ax.set_title(
-        experiment
-        + ": "
-        + str(int(frac_partoftrend))
-        + "% of years belong to a 20y trend period"
-    )
-    return bins
-
 
 
 # PI-CONTROL plot trend histograms for different p-values
@@ -219,8 +223,70 @@ for p_threshold in [5, 100]:
 
     ax.set_ylabel("PDF")
     plt.tight_layout()
-    plt.savefig("../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300)
+    plt.savefig(
+        "../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
+    )
 
+# PI-CONTROL trend histograms for CMIP6 ensemble
+CMIP6_PATH = "/cluster/work/apatt/wojan/MPI-GE/data/CMIP6_annual/"
+filelist = glob.glob(CMIP6_PATH + "*.nc")
+models = np.unique([x.split("/")[-1].split("_")[2] for x in filelist])
+
+p_threshold = 5
+CMIP6_histos = {}
+CMIP6_bins = np.arange(-.2, .2, .005)
+for i, model in enumerate(models):
+    print(str(int(i/len(models)*100)) + "%")
+    ds_list = [
+        selbox(xr.open_dataset(x, use_cftime=True))
+        for x in sorted(glob.glob(CMIP6_PATH + "*" + model + "*.nc"))
+    ]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
+    ds_CMIP6 = xr.concat(ds_list, dim="time")
+    slopes = np.asarray(
+        [
+            slope_if_significant(
+                ds_CMIP6["sfcWind"][x : x + 20], p_threshold=p_threshold / 100.0
+            )
+            for x in range(ds_CMIP6.time.size - 20)
+        ]
+    )
+    f, ax = plt.subplots()
+    CMIP6_histos[model] = plot_histo(slopes, ax, "Pi-control " + model, full_output=True, bins=CMIP6_bins)[0]
+    ax.set_ylabel("PDF")
+    plt.tight_layout()
+    plt.savefig(
+        "../plots/CMIP6/" + model + "_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
+    )
+    plt.close("all")
+# ensemble mean histo
+del CMIP6_histos["EC-Earth3-CC"]  # has no data
+del CMIP6_histos["AWI-ESM-1-1-LR"]  # only has negative trends of -0.07 m/s/dec
+n_mean = pd.DataFrame(CMIP6_histos).mean(axis=1)
+f, ax = plt.subplots()
+ax.bar(CMIP6_bins[1:], n_mean, width=0.005, color="Darkorange", alpha=.7)
+textdic = {
+    "horizontalalignment": "center",
+    "verticalalignment": "center",
+    "rotation": 90,
+    "fontsize": 8,
+}
+ax.axvline(x=-0.09, color="purple", ls="--")  # p.1, 2nd column, 1st paragraph
+ax.text(-0.083, n_mean.max() * 3.0 / 4, "Vautard et al. [2010] 1979 - 2008", textdic)
+ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
+ax.text(-0.107, n_mean.max() * 3.0 / 4, "Zheng et al. [2019] 1978 - 2003", textdic)
+ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
+ax.text(0.103, n_mean.max() * 3.0 / 4, "Zheng et al. [2019] 2004 - 2017", textdic)
+frac_partoftrend = calc_frac_partoftrend(slopes)
+ax.set_ylabel("CMIP6 ensemble mean PDF")
+ax.set_xlabel(
+    "Significant wind speed trends at "
+    + str(100 - p_threshold)
+    + "% level [m/s/decade]"
+)
+plt.tight_layout()
+plt.savefig(
+    "../plots/CMIP6/Ensmean_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
+)
 
 # trend histograms in other periods
 for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
@@ -270,7 +336,7 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
             density=True,
             color="darkgreen",
             alpha=0.7,
-            label="ensemble mean"
+            label="ensemble mean",
         )
         ax.set_ylabel("PDF ensemble members", color="darkorange")
         ax2.set_ylabel("PDF ensemble mean", color="darkgreen")
