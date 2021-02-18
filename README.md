@@ -10,7 +10,7 @@ Code underlying analysis performed in TITLE NAME.
 Fig 1 | attribution_maps.jpeg | attribution.py
 Fig. 2a | contribution_histograms.jpeg | attribution.py
 Fig. 2b | scatter_gothr+gsecd_abs.jpeg | attribution.py
-Fig. 3 | LUH_change_future_ref2000.jpeg | LUH_plots.py  TODO: Needs cleaning
+Fig. 3 | LUH_change_future_ref2000.jpeg | LUH_plots.py
 Fig. 4 | global_windspeeds.jpeg | trend_maps.py
 Fig. 5 | timeseries_picontrol_Europe.jpeg | trends.py
 Fig. 6 | box_timeseries_Europe.pdf | ensmean_timeseries.py
