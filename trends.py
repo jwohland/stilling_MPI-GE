@@ -283,6 +283,7 @@ ax.set_xlabel(
     + str(100 - p_threshold)
     + "% level [m/s/decade]"
 )
+ax.set_xlim(xmin=-.2, xmax=.2)
 plt.tight_layout()
 plt.savefig(
     "../plots/CMIP6/Ensmean_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
