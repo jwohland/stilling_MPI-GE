@@ -16,6 +16,12 @@ Fig. 5 | timeseries_picontrol_Europe.jpeg | trends.py
 Fig. 6 | box_timeseries_Europe.pdf | ensmean_timeseries.py
 Appendix Fig. A1|  LUH_change.jpeg | LUH_plots.py
 
+## Other Files
+
+make_land_mask.py computes a land mask on the MPI grid using runoff data and excluding Antartica and Greenland. 
+
+Lmon_Amon_diff.py verify that wind speed data provided in the modeling realm Atmosphere (Amon) and Land (Lmon) contain the same values. 
+
 ## Input data
 
 Input data is from the Max Planck Institute for Meteorology (MPI-M) Grand Ensemble (MPI-GE) that can be downloaded at https://esgf-data.dkrz.de/search/mpi-ge/ and from the Land Use Harmonization (LUH) Project that is accessable via https://luh.umd.edu/data.shtml#LUH1_Data.
