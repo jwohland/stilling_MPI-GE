@@ -6,12 +6,37 @@ import matplotlib.pyplot as plt
 from scipy.signal import periodogram
 import pandas as pd
 
+LATMIN, LATMAX = 37.5, 60
+LONMIN, LONMAX = -10, 25
+
 
 def selbox(ds):
-    # lats, lons = slice(45, 55), slice(10, 20)  # "Germany"
-    lats, lons = slice(37.5, 60), slice(-10, 25)
+    lats, lons = slice(LATMIN, LATMAX), slice(LONMIN, LONMAX)
     return ds.sel({"lat": lats, "lon": lons}).mean(dim=["lat", "lon"])
 
+
+def selHadISD(ds):
+    """
+    averages over all station locations used in Zeng et al. (2019) from the HadISD dataset
+    :param ds:
+    :return:
+    """
+    # load HadISD station list and limit to region of interest
+    station_list = pd.read_excel(
+        "../data/HadISD/Zeng_SIData2_HadISDv202.xlsx", usecols=["lons", "lats"]
+    )
+    station_list = station_list.where(
+        (station_list.lons < LONMAX)
+        & (station_list.lons > LONMIN)
+        & (station_list.lats > LATMIN)
+        & (station_list.lats < LATMAX)
+    ).dropna()
+    # interpolate input data to HadISD stations and return the station mean
+    ds_stations = []
+    for index, row in station_list.iterrows():
+        print(index)
+        ds_stations.append(ds.interp(lat=row["lats"], lon=row["lons"], method="linear"))
+    return xr.concat(ds_stations, dim="station_number").mean(dim="station_number")
 
 def ann_mean(ds):
     return ds.resample({"time": "1Y"}).mean()
