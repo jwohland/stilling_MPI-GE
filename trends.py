@@ -34,9 +34,9 @@ def selHadISD(ds):
     # interpolate input data to HadISD stations and return the station mean
     ds_stations = []
     for index, row in station_list.iterrows():
-        print(index)
         ds_stations.append(ds.interp(lat=row["lats"], lon=row["lons"], method="linear"))
     return xr.concat(ds_stations, dim="station_number").mean(dim="station_number")
+
 
 def ann_mean(ds):
     return ds.resample({"time": "1Y"}).mean()
@@ -227,30 +227,51 @@ plt.savefig("../plots/values_histogram.pdf")
 """
 Plot trend histograms
 """
-
+ds_list_HadISD = [
+    selHadISD(ann_mean(xr.open_dataset(x, use_cftime=True)))
+    for x in sorted(glob.glob("../data/pi-control/*.nc"))
+]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
+ds_picontrol_HadISD = xr.concat(ds_list_HadISD, dim="time")
 
 # PI-CONTROL plot trend histograms for different p-values
-for p_threshold in [5, 100]:
-    slopes = np.asarray(
-        [
-            slope_if_significant(
-                ds_picontrol["sfcWind"][x : x + 20], p_threshold=p_threshold / 100.0
-            )
-            for x in range(1980)
-        ]
-    )
-    f, ax = plt.subplots()
-    bins = plot_histo(slopes, ax, "Pi-control")
-    # fit Gaussian to histogram without significance screening
-    if p_threshold == 100:
-        mu, std = norm.fit(slopes)
-        ax.plot(bins, norm.pdf(bins, mu, std), color="red")
+for agg_type in [
+    "HadISD",
+    "box",
+]:  # HadISD is sensitivity test with data averaged to European HadISD stations
+    for p_threshold in [5, 100]:
+        if agg_type == "box":
+            ds_tmp = ds_picontrol.copy()
+        else:
+            ds_tmp = ds_picontrol_HadISD.copy()
+        slopes = np.asarray(
+            [
+                slope_if_significant(
+                    ds_tmp["sfcWind"][x : x + 20], p_threshold=p_threshold / 100.0
+                )
+                for x in range(1980)
+            ]
+        )
+        f, ax = plt.subplots()
+        bins = plot_histo(slopes, ax, "Pi-control")
+        # fit Gaussian to histogram without significance screening
+        if p_threshold == 100:
+            mu, std = norm.fit(slopes)
+            ax.plot(bins, norm.pdf(bins, mu, std), color="red")
 
-    ax.set_ylabel("PDF")
-    plt.tight_layout()
-    plt.savefig(
-        "../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
-    )
+        ax.set_ylabel("PDF")
+        plt.tight_layout()
+        if agg_type == "box":
+            plt.savefig(
+                "../plots/picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg",
+                dpi=300,
+            )
+        else:
+            plt.savefig(
+                "../plots/picontrol_HadISD_wind_trends_Europe_"
+                + str(p_threshold)
+                + ".jpeg",
+                dpi=300,
+            )
 
 # PI-CONTROL trend histograms for CMIP6 ensemble
 CMIP6_PATH = "/cluster/work/apatt/wojan/MPI-GE/data/CMIP6_annual/"
@@ -259,9 +280,9 @@ models = np.unique([x.split("/")[-1].split("_")[2] for x in filelist])
 
 p_threshold = 5
 CMIP6_histos = {}
-CMIP6_bins = np.arange(-.2, .2, .005)
+CMIP6_bins = np.arange(-0.2, 0.2, 0.005)
 for i, model in enumerate(models):
-    print(str(int(i/len(models)*100)) + "%")
+    print(str(int(i / len(models) * 100)) + "%")
     ds_list = [
         selbox(xr.open_dataset(x, use_cftime=True))
         for x in sorted(glob.glob(CMIP6_PATH + "*" + model + "*.nc"))
@@ -276,11 +297,18 @@ for i, model in enumerate(models):
         ]
     )
     f, ax = plt.subplots()
-    CMIP6_histos[model] = plot_histo(slopes, ax, "Pi-control " + model, full_output=True, bins=CMIP6_bins)[0]
+    CMIP6_histos[model] = plot_histo(
+        slopes, ax, "Pi-control " + model, full_output=True, bins=CMIP6_bins
+    )[0]
     ax.set_ylabel("PDF")
     plt.tight_layout()
     plt.savefig(
-        "../plots/CMIP6/" + model + "_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
+        "../plots/CMIP6/"
+        + model
+        + "_picontrol_wind_trends_Europe_"
+        + str(p_threshold)
+        + ".jpeg",
+        dpi=300,
     )
     plt.close("all")
 # ensemble mean histo
@@ -288,7 +316,7 @@ del CMIP6_histos["EC-Earth3-CC"]  # has no data
 del CMIP6_histos["AWI-ESM-1-1-LR"]  # only has negative trends of -0.07 m/s/dec
 n_mean = pd.DataFrame(CMIP6_histos).mean(axis=1)
 f, ax = plt.subplots()
-ax.bar(CMIP6_bins[1:], n_mean, width=0.005, color="Darkorange", alpha=.7)
+ax.bar(CMIP6_bins[1:], n_mean, width=0.005, color="Darkorange", alpha=0.7)
 textdic = {
     "horizontalalignment": "center",
     "verticalalignment": "center",
@@ -308,10 +336,11 @@ ax.set_xlabel(
     + str(100 - p_threshold)
     + "% level [m/s/decade]"
 )
-ax.set_xlim(xmin=-.2, xmax=.2)
+ax.set_xlim(xmin=-0.2, xmax=0.2)
 plt.tight_layout()
 plt.savefig(
-    "../plots/CMIP6/Ensmean_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg", dpi=300
+    "../plots/CMIP6/Ensmean_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg",
+    dpi=300,
 )
 
 # trend histograms in other periods
