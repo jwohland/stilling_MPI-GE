@@ -105,9 +105,9 @@ def plot_histo(slopes, ax, experiment, full_output=False, bins=50):
     ax.axvline(x=-0.09, color="purple", ls="--")  # p.1, 2nd column, 1st paragraph
     ax.text(-0.083, n.max() * 3.0 / 4, "Vautard et al. [2010] 1979 - 2008", textdic)
     ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
-    ax.text(-0.107, n.max() * 3.0 / 4, "Zheng et al. [2019] 1978 - 2003", textdic)
+    ax.text(-0.107, n.max() * 3.0 / 4, "Zeng et al. [2019] 1978 - 2003", textdic)
     ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
-    ax.text(0.103, n.max() * 3.0 / 4, "Zheng et al. [2019] 2004 - 2017", textdic)
+    ax.text(0.103, n.max() * 3.0 / 4, "Zeng et al. [2019] 2004 - 2017", textdic)
     frac_partoftrend = calc_frac_partoftrend(slopes)
     ax.set_xlabel(
         "Significant wind speed trends at "
@@ -326,9 +326,9 @@ textdic = {
 ax.axvline(x=-0.09, color="purple", ls="--")  # p.1, 2nd column, 1st paragraph
 ax.text(-0.083, n_mean.max() * 3.0 / 4, "Vautard et al. [2010] 1979 - 2008", textdic)
 ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
-ax.text(-0.107, n_mean.max() * 3.0 / 4, "Zheng et al. [2019] 1978 - 2003", textdic)
+ax.text(-0.107, n_mean.max() * 3.0 / 4, "Zeng et al. [2019] 1978 - 2003", textdic)
 ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
-ax.text(0.103, n_mean.max() * 3.0 / 4, "Zheng et al. [2019] 2004 - 2017", textdic)
+ax.text(0.103, n_mean.max() * 3.0 / 4, "Zeng et al. [2019] 2004 - 2017", textdic)
 frac_partoftrend = calc_frac_partoftrend(slopes)
 ax.set_ylabel("CMIP6 ensemble mean PDF")
 ax.set_xlabel(
