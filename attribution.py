@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import warnings
 import numpy as np
 import pickle
+import xesmf as xe
+from scipy.stats import spearmanr, pearsonr
+
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
@@ -248,7 +251,6 @@ plt.savefig("../plots/contribution_histograms.jpeg", dpi=300)
 """
 The following is under construction!!!
 """
-from scipy.stats import spearmanr, pearsonr
 
 
 def quantile(da, q):
@@ -295,11 +297,9 @@ for wind_type in ["abs", "rel"]:
             .coarsen(lon=4, boundary="trim")
             .mean()
         )
-        ds_lu_int = ds_lu.interp(lat=ds_wind.lat, lon=ds_wind.lon, method="linear")
-        ds_lu_int[
-            :, 0
-        ] = 0  # todo improve this ugly fix. Maybe using xEMSF? Without specifying fill_value=0, nans are added at lon=0 because interpolation doesn't understand periodicity
-        # exclude grid boxes where land use change is exactly zero (i.e., oceans and non-used lands)
+
+        regridder = xe.Regridder(ds_lu_agg, ds_wind, "bilinear", periodic=True)
+        ds_lu_int = regridder(ds_lu_agg)
         y = ds_lu_int.where(np.abs(ds_lu_int) > 0.01)
         x = ds_wind.where(np.abs(ds_lu_int) > 0.01)
 
