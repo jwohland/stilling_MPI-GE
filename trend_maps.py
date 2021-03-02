@@ -1,36 +1,16 @@
 # plot global map of wind speed trends over 1900 - 2010
 
 from scipy.stats import linregress
-import xarray as xr
-import glob
-import pandas as pd
 import numpy as np
 import matplotlib.cm as cm
-import matplotlib.pyplot as plt
+from utils import *
 import warnings
+
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
     import cartopy
     import cartopy.crs as ccrs
-
-
-def ann_mean(ds):
-    return ds.resample({"time": "1Y"}).mean()
-
-
-def sel_time(ds, tslice):
-    return ds.sel({"time": tslice})
-
-
-def open_datasets_ensmean(filelist):
-    ds = [ann_mean(sel_time(xr.open_dataset(x, use_cftime=True))) for x in filelist]
-    ds = xr.concat(
-        ds,
-        dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
-    )
-    ds = ds.mean(dim="ensemble_member")
-    return ds
 
 
 def plot_field(data, ax=None, title=None, **kwargs):
@@ -59,7 +39,6 @@ for t_slice in [
 ]:
     ds = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
     ds = sel_time(ds, t_slice)
-    # ds = open_datasets_ensmean(sorted(glob.glob(path + "sfcWind*.nc")))
 
     nt, nlat, nlon = ds["sfcWind"].values.shape
     trends = np.zeros((nlat, nlon)) * np.nan
@@ -105,7 +84,9 @@ ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
 # historical & 1pCO2
 for experiment in ["historical", "1pCO2"]:
     for t_start in np.arange(1860, 2005, 10):
-        ds = ann_mean(xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0]))
+        ds = ann_mean(
+            xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
+        )
         t_slice = slice(
             str(t_start), str(t_start + 9)
         )  # slice includes first and last years, so this is a 10y period
@@ -113,7 +94,8 @@ for experiment in ["historical", "1pCO2"]:
         plt.close("all")
         ax = plot_field(
             ds["sfcWind"] - ref["sfcWind"],
-            title= experiment + "\nDiff mean surface wind speed "
+            title=experiment
+            + "\nDiff mean surface wind speed "
             + t_slice.start
             + " - "
             + t_slice.stop
@@ -124,7 +106,9 @@ for experiment in ["historical", "1pCO2"]:
         )
         plt.tight_layout()
         plt.savefig(
-            "../plots/maps/" + experiment + "/map_windspeeds"
+            "../plots/maps/"
+            + experiment
+            + "/map_windspeeds"
             + str(t_slice.start)
             + "_"
             + str(t_slice.stop)
@@ -134,7 +118,9 @@ for experiment in ["historical", "1pCO2"]:
 # future
 for experiment in ["rcp26", "rcp45", "rcp85"]:
     for t_start in np.arange(2010, 2100, 10):
-        ds = ann_mean(xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0]))
+        ds = ann_mean(
+            xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
+        )
         t_slice = slice(
             str(t_start), str(t_start + 9)
         )  # slice includes first and last years, so this is a 10y period
@@ -142,7 +128,8 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
         plt.close("all")
         ax = plot_field(
             ds["sfcWind"] - ref["sfcWind"],
-            title=experiment + "\n Diff mean surface wind speed "
+            title=experiment
+            + "\n Diff mean surface wind speed "
             + t_slice.start
             + " - "
             + t_slice.stop
@@ -153,7 +140,9 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
         )
         plt.tight_layout()
         plt.savefig(
-            "../plots/maps/" + experiment + "/map_windspeeds"
+            "../plots/maps/"
+            + experiment
+            + "/map_windspeeds"
             + str(t_slice.start)
             + "_"
             + str(t_slice.stop)
@@ -173,7 +162,9 @@ ds_picontrol = xr.concat(ds_list, dim="time")
 onshore_mean = ds_picontrol.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
 
 # plotting
-f, ax = plt.subplots(ncols=2, sharey=True, figsize=(8,4), gridspec_kw={'width_ratios': [1, 2]})
+f, ax = plt.subplots(
+    ncols=2, sharey=True, figsize=(8, 4), gridspec_kw={"width_ratios": [1, 2]}
+)
 ax[0].hist(
     onshore_mean["sfcWind"].values,
     bins=200,
@@ -200,10 +191,26 @@ ax[1].set_xlabel("")
 
 # add max & min lines for pi-control
 for i in range(2):
-    ax[i].axhline(onshore_mean["sfcWind"].min().values, ls="--", color="black", alpha=.5)
-    ax[i].axhline(onshore_mean["sfcWind"].max().values, ls="--", color="black", alpha=.5)
-ax[0].text(x=20, y=onshore_mean["sfcWind"].min().values + 0.01, s="Minimum", ha="center", va="center")
-ax[0].text(x=20, y=onshore_mean["sfcWind"].max().values + 0.01, s="Maximum", ha="center", va="center")
+    ax[i].axhline(
+        onshore_mean["sfcWind"].min().values, ls="--", color="black", alpha=0.5
+    )
+    ax[i].axhline(
+        onshore_mean["sfcWind"].max().values, ls="--", color="black", alpha=0.5
+    )
+ax[0].text(
+    x=20,
+    y=onshore_mean["sfcWind"].min().values + 0.01,
+    s="Minimum",
+    ha="center",
+    va="center",
+)
+ax[0].text(
+    x=20,
+    y=onshore_mean["sfcWind"].max().values + 0.01,
+    s="Maximum",
+    ha="center",
+    va="center",
+)
 
 plt.tight_layout()
 plt.savefig(

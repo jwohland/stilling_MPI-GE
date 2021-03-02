@@ -1,25 +1,4 @@
-import xarray as xr
-import pandas as pd
-import glob
-import matplotlib.pyplot as plt
-
-
-def selbox(ds):
-    lats, lons = slice(37.5, 60), slice(-10, 25)
-    return ds.sel({"lat": lats, "lon": lons}).mean(dim=["lat", "lon"])
-
-
-def ann_mean(ds):
-    return ds.resample({"time": "1Y"}).mean()
-
-
-def open_datasets(filelist):
-    ds = [ann_mean(selbox(xr.open_dataset(x, use_cftime=True))) for x in filelist]
-    ds = xr.concat(
-        ds,
-        dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
-    )
-    return ds
+from utils import *
 
 
 f, ax = plt.subplots(ncols=4, figsize=(10, 5), sharey=True)

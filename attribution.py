@@ -1,16 +1,10 @@
-# plot global map of wind speed trends over 1900 - 2010
-
-import xarray as xr
-import glob
-import pandas as pd
 import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 import warnings
 import numpy as np
 import pickle
 import xesmf as xe
 from scipy.stats import spearmanr, pearsonr
-
+from utils import *
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
@@ -18,79 +12,30 @@ with warnings.catch_warnings():
     import cartopy.crs as ccrs
 
 
-def ann_mean(ds):
-    return ds.resample({"time": "1Y"}).mean()
+def quantile(da, q):
+    tmp = da.values
+    tmp = tmp[np.isfinite(tmp)]
+    return np.quantile(tmp, q)
 
 
-def sel_time(ds, tslice):
-    return ds.sel({"time": tslice})
-
-
-def open_datasets_ensmean(filelist):
-    ds = [ann_mean(sel_time(xr.open_dataset(x, use_cftime=True))) for x in filelist]
-    ds = xr.concat(
-        ds,
-        dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
-    )
-    ds = ds.mean(dim="ensemble_member")
-    return ds
-
-
-def plot_field(data, ax=None, title=None, **kwargs):
+def count_quadrant(x, y):
     """
-    plots maps
-    :param data: data xarray that shall be plotted
-    :param ax: axes
-    :param title: figure title
+    count the number of occurences of
+        x > 0 and
+    :param x:
+    :param y:
     :return:
     """
-    ax = ax or plt.axes(projection=ccrs.PlateCarree())
-    data.plot(ax=ax, **kwargs)
-    ax.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
-    ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
-    ax.set_title(title)
-    return ax
 
 
-def open_LUH(filename, year=None, name=None):
-    da = (
-        xr.open_rasterio(filename)
-        .rename({"x": "lon", "y": "lat"})
-        .drop("band")
-        .squeeze()
-    )
-    if year:
-        da = da.assign_coords({"time": pd.Timestamp(str(year) + "-01-01")})
-    if name:
-        da.name = name
-    return da
-
-
-def open_LUH_period(path, ts, te):
-    """
-    open time varying primary and secondary vegeation maps and combine them in a single xarray Dataset
-    :param path: path to data
-    :param ts: start year of respective experiment, e.g. 1850 for historical
-    :param te: end year for respective experiment, e.g. 2000 for historical
-    :return:
-    """
-    da_gothr = xr.concat(
-        [
-            open_LUH(path + "updated_states/gothr." + str(year) + ".txt", year, "gothr")
-            for year in range(ts, te)
-        ],
-        dim="time",
-    )
-    da_gsecd = xr.concat(
-        [
-            open_LUH(path + "updated_states/gsecd." + str(year) + ".txt", year, "gsecd")
-            for year in range(ts, te)
-        ],
-        dim="time",
-    )
-    ds = xr.merge([da_gothr, da_gsecd])
-    ds["gothr+gsecd"] = ds["gothr"] + ds["gsecd"]
-    return ds
+def conditional_prob(x, y, x_thr):
+    joint_prob = y[(x > x_thr) & (y < 0)].size
+    single_prob = y[x > x_thr].size
+    if single_prob == 0:
+        cond_prob = 0
+    else:
+        cond_prob = joint_prob / single_prob
+    return cond_prob
 
 
 # load data
@@ -249,34 +194,8 @@ plt.savefig("../plots/contribution_histograms.jpeg", dpi=300)
 
 
 """
-The following is under construction!!!
+scatter plots
 """
-
-
-def quantile(da, q):
-    tmp = da.values
-    tmp = tmp[np.isfinite(tmp)]
-    return np.quantile(tmp, q)
-
-
-def count_quadrant(x, y):
-    """
-    count the number of occurences of
-        x > 0 and
-    :param x:
-    :param y:
-    :return:
-    """
-
-
-def conditional_prob(x, y, x_thr):
-    joint_prob = y[(x > x_thr) & (y < 0)].size
-    single_prob = y[x > x_thr].size
-    if single_prob == 0:
-        cond_prob = 0
-    else:
-        cond_prob = joint_prob / single_prob
-    return cond_prob
 
 
 lu_variable = "gothr+gsecd"

@@ -1,18 +1,6 @@
-import xarray as xr
 from scipy.stats import linregress, norm, pearsonr, anderson, kstest
-import glob
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.signal import periodogram
-import pandas as pd
-
-LATMIN, LATMAX = 37.5, 60
-LONMIN, LONMAX = -10, 25
-
-
-def selbox(ds):
-    lats, lons = slice(LATMIN, LATMAX), slice(LONMIN, LONMAX)
-    return ds.sel({"lat": lats, "lon": lons}).mean(dim=["lat", "lon"])
+from utils import *
 
 
 def selHadISD(ds):
@@ -36,10 +24,6 @@ def selHadISD(ds):
     for index, row in station_list.iterrows():
         ds_stations.append(ds.interp(lat=row["lats"], lon=row["lons"], method="linear"))
     return xr.concat(ds_stations, dim="station_number").mean(dim="station_number")
-
-
-def ann_mean(ds):
-    return ds.resample({"time": "1Y"}).mean()
 
 
 def slope_if_significant(y, p_threshold=0.05):
@@ -75,15 +59,6 @@ def calc_frac_partoftrend(y):
                     )  # add remaing years to 20y at the end of the timeseries
                     break
     return np.round(y.sum() / (y.size + 19) * 100)
-
-
-def open_datasets(filelist):
-    ds = [ann_mean(selbox(xr.open_dataset(x, use_cftime=True))) for x in filelist]
-    ds = xr.concat(
-        ds,
-        dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
-    )
-    return ds
 
 
 def plot_histo(slopes, ax, experiment, full_output=False, bins=50):
@@ -179,49 +154,6 @@ ax.set_xlim(xmin=ds_picontrol.time[0].values, xmax=ds_picontrol.time[-1].values)
 plt.tight_layout()
 plt.savefig("../plots/timeseries_picontrol_Europe.jpeg", dpi=300)
 
-# autocorrelation
-f, ax = plt.subplots()
-lags, corrs = np.arange(1, 50), []
-for lag in lags:
-    vals = ds_picontrol["sfcWind"].values
-    corrs.append(pearsonr(vals[lag:], vals[:-lag])[0])
-ax.plot(lags, corrs, marker="o", linewidth=0)
-ax.set_xlabel("Lag [years]")
-ax.set_ylabel("Autocorrelation (Lagged Pearson correlation coefficient)")
-plt.suptitle("Wind autocorrelation Europe pi-control MPI-GE")
-plt.savefig("../plots/sfcWind_autocorrelation.pdf")
-
-# periodogramm
-freq, Pxx = periodogram(vals)
-f, ax = plt.subplots()
-ax.scatter(freq, Pxx)
-ax.set_xlabel("Frequency [1/y]")
-ax.set_ylabel("Power spectral density")
-ax.set_xlim(xmin=-0.001, xmax=0.1)
-plt.suptitle("Wind periodogram Europe pi-control MPI-GE")
-plt.savefig("../plots/periodogram.pdf")
-
-
-# histogram
-f, ax = plt.subplots()
-ax.hist(ds_picontrol["sfcWind"].values, bins=100, density=True)
-ares = anderson(ds_picontrol["sfcWind"].values)
-if (ares.critical_values > ares.statistic).all():
-    # H_0 (data come from normal distribution) can not be rejected at 1% level
-    title_string = "Anderson says Gaussian (1% significance level) \n "
-else:
-    title_string = "Anderson says not Gaussian (1% significance level) \n "
-ksres = kstest(ds_picontrol["sfcWind"].values, cdf=norm.cdf)
-title_string += (
-    "KS reports p-value of "
-    + str(ksres.pvalue)
-    + " and D="
-    + str(np.round(ksres.statistic, 1))
-)
-ax.set_title(title_string)
-ax.set_xlabel("sfcWind [m/s]")
-ax.set_ylabel("PDF")
-plt.savefig("../plots/values_histogram.pdf")
 
 
 """

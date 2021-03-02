@@ -1,8 +1,5 @@
-import xarray as xr
-import matplotlib.pyplot as plt
-import pandas as pd
 from matplotlib import cm
-
+from utils import *
 import warnings
 
 with warnings.catch_warnings():
@@ -11,70 +8,6 @@ with warnings.catch_warnings():
     import cartopy
 
 
-def forest_perarea(ds):
-    """
-    Fraction of grid box covered by forest.
-    Calculated following the suggestions in the FAQ (see below), then multiplied with cell_area
-    because relative evolution appears more relevant here.
-
-    From LUH FAQ (https://luh.umd.edu/faq.shtml, Jan 27th 2021):
-    "You can compute an estimate of the forest area in the Land-Use Harmonization products.
-    For the original LUH products, first you will need to download the forest/non-forest map
-    (fnf_map.txt) and the grid-cell area map (cellarea_halfdeg.txt) in addition to the LUH data
-    packages.
-    The forest area in an individual grid-cell is given by:
-        (gothr + gsecd)*fnf*cellarea
-    (where gothr and gsecd are the fractions of the grid-cell occupied by primary and secondary land respectively).
-    :param ds
-    :return:
-    """
-    return (ds["gothr"] + ds["gsecd"]) * ds["fnf"]
-
-
-def open_LUH(filename, year=None, name=None):
-    da = (
-        xr.open_rasterio(filename)
-        .rename({"x": "lat", "y": "lon"})
-        .drop("band")
-        .squeeze()
-    )
-    if year:
-        da = da.assign_coords({"time": pd.Timestamp(str(year) + "-01-01")})
-    if name:
-        da.name = name
-    return da
-
-
-def open_LUH_period(path, ts, te):
-    """
-    open time varying primary and secondary vegeation maps and combine them in a single xarray Dataset
-    :param path: path to data
-    :param ts: start year of respective experiment, e.g. 1850 for historical
-    :param te: end year for respective experiment, e.g. 2000 for historical
-    :return:
-    """
-    da_gothr = xr.concat(
-        [
-            open_LUH(path + "updated_states/gothr." + str(year) + ".txt", year, "gothr")
-            for year in range(ts, te)
-        ],
-        dim="time",
-    )
-    da_gsecd = xr.concat(
-        [
-            open_LUH(path + "updated_states/gsecd." + str(year) + ".txt", year, "gsecd")
-            for year in range(ts, te)
-        ],
-        dim="time",
-    )
-    ds = xr.merge([da_fnf, da_gothr, da_gsecd])
-    ds["forest"] = forest_perarea(ds)
-    ds["gothr+gsecd"] = ds["gothr"] + ds["gsecd"]
-    return ds
-
-
-# open constant forest/non-forest map
-da_fnf = open_LUH("../data/LUHa.v1/fnf_map.txt", name="fnf")
 # open time varying fields
 ds = open_LUH_period("../data/LUHa.v1/", 1850, 2000)
 ref = ds.sel({"time": slice("1850", "1860")}).mean(dim="time")
@@ -147,7 +80,9 @@ plt.savefig("../plots/LUH1/LUH_change.jpeg", dpi=300)
 plot ref and changes to ref in the future
 """
 
-ref_end = ds.sel({"time": slice("1990", "2000")}).mean(dim="time")  # 2nd reference scenario end of 20th century
+ref_end = ds.sel({"time": slice("1990", "2000")}).mean(
+    dim="time"
+)  # 2nd reference scenario end of 20th century
 
 for i_ref, reference_data in enumerate([ref, ref_end]):
     f, ax = plt.subplots(
@@ -160,13 +95,16 @@ for i_ref, reference_data in enumerate([ref, ref_end]):
     cbar_ax = f.add_axes([0.2, 0.19, 0.6, 0.04])
 
     if i_ref == 0:
-        vmax=1
+        vmax = 1
     else:
-        vmax=.5
+        vmax = 0.5
     for j, experiment in enumerate(["IMAGE_rcp26", "MiniCAM_rcp45", "MESSAGE_rcp85"]):
         print(experiment)
         ds_future = open_LUH_period("../data/LUHa.v1/" + experiment + "/", 2090, 2100)
-        diff = ds_future.sel({"time": slice("2090", "2100")}).mean(dim="time") - reference_data
+        diff = (
+            ds_future.sel({"time": slice("2090", "2100")}).mean(dim="time")
+            - reference_data
+        )
 
         var = "gothr+gsecd"
         if j != 0:
@@ -187,7 +125,10 @@ for i_ref, reference_data in enumerate([ref, ref_end]):
                 cbar_ax=cbar_ax,
                 extend="both",
                 cmap=cm.get_cmap("RdBu"),
-                cbar_kwargs={"orientation": "horizontal", "label": "Difference in primary plus secondary land"},
+                cbar_kwargs={
+                    "orientation": "horizontal",
+                    "label": "Difference in primary plus secondary land",
+                },
             )
         ax[j].set_title(experiment)
 
