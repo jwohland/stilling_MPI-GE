@@ -48,14 +48,14 @@ slice_dic = {
 
 ref = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
 ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
-ds_stylized = ann_mean(xr.open_dataset(glob.glob("../data/1pCO2/ensmean/*.nc")[0]))
-LUH_ref = open_LUH_period("../data/LUHa.v1/", 1850, 1860).mean(dim="time")
 
 try:
     with open("../output/attribution_maps.pickle", "rb") as handle:
         ds_dict = pickle.load(handle)
 except FileNotFoundError:
     ds_dict = {}
+    ds_stylized = ann_mean(xr.open_dataset(glob.glob("../data/1pCO2/ensmean/*.nc")[0]))
+    LUH_ref = open_LUH_period("../data/LUHa.v1/", 1850, 1860).mean(dim="time")
     for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
         ds_dict[experiment] = {}
         ds_tmp = (
