@@ -116,12 +116,7 @@ assert calc_frac_partoftrend(test_array) == 100.0
 print("Test completed succesfully")
 
 # plot full timeseries and mark trends
-path = "../data/pi-control/"
-ds_list = [
-    ann_mean(selbox(xr.open_dataset(x, use_cftime=True)))
-    for x in sorted(glob.glob(path + "*.nc"))
-]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
-ds_picontrol = xr.concat(ds_list, dim="time")
+ds_picontrol = open_picontrol()
 
 
 slopes = np.asarray(

@@ -38,6 +38,14 @@ def open_datasets(filelist):
     return ds
 
 
+def open_picontrol():
+    path = "../data/pi-control/"
+    ds_list = [
+        ann_mean(selbox(xr.open_dataset(x, use_cftime=True)))
+        for x in sorted(glob.glob(path + "*.nc"))
+    ]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
+    return xr.concat(ds_list, dim="time")
+
 # LUH
 def open_LUH(filename, year=None, name=None):
     da = (

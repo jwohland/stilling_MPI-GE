@@ -153,12 +153,7 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
 # global mean timeseries
 # prep data
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
-ds_list = [
-    ann_mean(xr.open_dataset(x, use_cftime=True))
-    for x in sorted(glob.glob("../data/pi-control/*.nc"))
-]
-# use_cftime needed after 2200. Otherwise SerializationWarning is raised
-ds_picontrol = xr.concat(ds_list, dim="time")
+ds_picontrol = open_picontrol()
 onshore_mean = ds_picontrol.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
 
 # plotting
