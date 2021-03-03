@@ -1,5 +1,12 @@
-from scipy.stats import linregress, norm, pearsonr, anderson, kstest
+from scipy.stats import linregress, norm
 import numpy as np
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import warnings
+import matplotlib.patches as mpatches
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=ImportWarning)
+    import cartopy.crs as ccrs
+    import cartopy.mpl.geoaxes
 from utils import *
 
 
@@ -130,6 +137,7 @@ slopes_ts = xr.DataArray(
     slopes, dims="time", coords={"time": ds_picontrol["sfcWind"].time[:1980]}
 )
 
+# plot slopes and mark trend onsets
 f, ax = plt.subplots(figsize=(12, 5))
 ds_picontrol["sfcWind"].plot(ax=ax, alpha=0.5, label="Annual mean")
 ds_picontrol["sfcWind"].rolling(time=20, center=True).mean().dropna(dim="time").plot(
@@ -141,11 +149,35 @@ ds_picontrol["sfcWind"].where(slopes_ts > 0).plot.line(
 ds_picontrol["sfcWind"].where(slopes_ts < 0).plot.line(
     marker="o", linewidth=0, color="green", alpha=0.7, label="onset downward trend"
 )
-ax.legend(loc="upper right", ncol=4)
+# add inset with map of focus region
+axins = inset_axes(
+    ax,
+    width="10%",
+    height="20%",
+    loc="upper left",
+    axes_class=cartopy.mpl.geoaxes.GeoAxes,
+    axes_kwargs=dict(map_projection=ccrs.PlateCarree()),
+)
+axins.set_extent((LONMIN-1, LONMAX +1, LATMIN -1.5, LATMAX +.5))
+axins.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
+axins.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.15)
+
+axins.add_patch(
+    mpatches.Rectangle(
+        xy=[LONMIN, LATMIN],
+        width=LONMAX - LONMIN,
+        height=LATMAX - LATMIN,
+        facecolor="blue",
+        alpha=0.2,
+        transform=ccrs.PlateCarree(),
+    )
+)
+axins.outline_patch.set_visible(False)
+ax.legend(loc="upper right", ncol=2)
 ax.set_xlabel("Year of pi-control simulation", fontsize=12)
 ax.set_ylabel("European mean wind speed [m/s]", fontsize=12)
 ax.set_title("")
-ax.set_ylim(ymax=5.4)
+ax.set_ylim(ymax=5.42)
 ax.set_xlim(xmin=ds_picontrol.time[0].values, xmax=ds_picontrol.time[-1].values)
 plt.tight_layout()
 plt.savefig("../plots/timeseries_picontrol_Europe.jpeg", dpi=300)
@@ -176,9 +208,9 @@ for trend_length in [15, 20, 25]:
                     slope_if_significant(
                         ds_tmp["sfcWind"][x : x + trend_length],
                         p_threshold=p_threshold / 100.0,
-                        trend_length=trend_length
+                        trend_length=trend_length,
                     )
-                    for x in range(ds_tmp.time.size-trend_length)
+                    for x in range(ds_tmp.time.size - trend_length)
                 ]
             )
             f, ax = plt.subplots()
@@ -272,9 +304,7 @@ ax.set_xlabel(
     + "% level [m/s/decade]"
 )
 ax.set_title(
-    "Pi-control: "
-    + str(int(frac_mean))
-    + "% of years belong to a 20y trend period"
+    "Pi-control: " + str(int(frac_mean)) + "% of years belong to a 20y trend period"
 )
 ax.set_xlim(xmin=-0.2, xmax=0.2)
 plt.tight_layout()
