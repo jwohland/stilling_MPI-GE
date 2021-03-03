@@ -46,7 +46,7 @@ slice_dic = {
     "rcp26": {"end": slice("2090", "2100"), "equiv": slice("1890", "1900")},
 }
 
-ref = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
+ref = ann_mean(xr.open_dataset("../data/historical/ensmean/sfcWind_Lmon_MPI-ESM_historical_ensmean_185001-200512.nc"))
 ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
 
 try:
