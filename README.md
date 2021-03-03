@@ -8,13 +8,22 @@ Code underlying analysis performed in TITLE NAME.
 | Figure | Filename | Creating python script |
 |---|---|---|
 Fig 1 | attribution_maps.jpeg | attribution.py
-Fig. 2a | contribution_histograms.jpeg | attribution.py
-Fig. 2b | scatter_gothr+gsecd_abs.jpeg | attribution.py
-Fig. 3 | LUH_change_future_ref2000.jpeg | LUH_plots.py
-Fig. 4 | global_windspeeds.jpeg | trend_maps.py
-Fig. 5 | timeseries_picontrol_Europe.jpeg | trends.py
-Fig. 6 | box_timeseries_Europe.pdf | ensmean_timeseries.py
+Fig. 2 | contribution_histograms.jpeg | attribution.py
+Fig. 3 | scatter_gothr+gsecd_abs.jpeg | attribution.py
+Fig. 4 | LUH_change_future_ref2000.jpeg | LUH_plots.py
+Fig. 5 | global_windspeeds.jpeg | trend_maps.py
+Fig. 6 | timeseries_picontrol_Europe.jpeg | trends.py
+Fig. 7a | picontrol_wind_trends_Europe_5_20y.jpeg | trends.py
+Fig. 7b | Ensmean_picontrol_wind_trends_Europe_5.jpeg | trends.py
+Fig. 8a | historical_wind_trends_Europe_5_all.jpeg | trends.py
+Fig. 8b | rcp26_wind_trends_Europe_5_all.jpeg  | trends.py
+Fig. 8c | rcp45_wind_trends_Europe_5_all.jpeg | trends.py
+Fig. 8d | rcp85_wind_trends_Europe_5_all.jpeg | trends.py
 Appendix Fig. A1|  LUH_change.jpeg | LUH_plots.py
+Appendix Fig. A2| box_timeseries_Europe.jpeg | ensmean_timeseries.py
+Appendix Fig. A3| picontrol_HadISD_wind_trends_Europe_5.jpeg | trends.py
+Appendix Fig. A4a | picontrol_wind_trends_Europe_5_15y.jpeg | trends.py
+Appendix Fig. A4b | Figs/picontrol_wind_trends_Europe_5_25y.jpeg | trends.py
 
 ## Other Files
 
