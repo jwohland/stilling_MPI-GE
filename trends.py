@@ -3,6 +3,7 @@ import numpy as np
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import warnings
 import matplotlib.patches as mpatches
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
     import cartopy.crs as ccrs
@@ -93,7 +94,8 @@ def plot_histo(slopes, ax, experiment, full_output=False, bins=50, trend_length=
     ax.set_xlabel(
         "Significant wind speed trends at "
         + str(100 - p_threshold)
-        + "% level [m/s/decade]"
+        + "% level [m/s/decade]",
+        fontsize=12,
     )
     ax.set_title(
         experiment
@@ -158,7 +160,7 @@ axins = inset_axes(
     axes_class=cartopy.mpl.geoaxes.GeoAxes,
     axes_kwargs=dict(map_projection=ccrs.PlateCarree()),
 )
-axins.set_extent((LONMIN-1, LONMAX +1, LATMIN -1.5, LATMAX +.5))
+axins.set_extent((LONMIN - 1, LONMAX + 1, LATMIN - 1.5, LATMAX + 0.5))
 axins.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
 axins.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.15)
 
@@ -220,7 +222,8 @@ for trend_length in [15, 20, 25]:
                 mu, std = norm.fit(slopes)
                 ax.plot(bins, norm.pdf(bins, mu, std), color="red")
 
-            ax.set_ylabel("PDF")
+            ax.set_ylabel("MPI-GE PDF", fontsize=12)
+            add_letters(ax)
             plt.tight_layout()
             if agg_type == "box":
                 plt.savefig(
@@ -297,16 +300,18 @@ ax.axvline(x=-0.1, color="purple", ls="--")  # from SI Fig. 4e
 ax.text(-0.107, n_mean.max() * 3.0 / 4, "Zeng et al. [2019] 1978 - 2003", textdic)
 ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
 ax.text(0.103, n_mean.max() * 3.0 / 4, "Zeng et al. [2019] 2004 - 2017", textdic)
-ax.set_ylabel("CMIP6 ensemble mean PDF")
+ax.set_ylabel("CMIP6 ensemble mean PDF", fontsize=12)
 ax.set_xlabel(
     "Significant wind speed trends at "
     + str(100 - p_threshold)
-    + "% level [m/s/decade]"
+    + "% level [m/s/decade]",
+    fontsize=12,
 )
 ax.set_title(
     "Pi-control: " + str(int(frac_mean)) + "% of years belong to a 20y trend period"
 )
 ax.set_xlim(xmin=-0.2, xmax=0.2)
+add_letters(ax, letter_offset=1)
 plt.tight_layout()
 plt.savefig(
     "../plots/CMIP6/Ensmean_picontrol_wind_trends_Europe_" + str(p_threshold) + ".jpeg",
@@ -314,7 +319,7 @@ plt.savefig(
 )
 
 # trend histograms in other periods
-for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
+for letter_index, experiment in enumerate(["historical", "rcp26", "rcp45", "rcp85"]):
     print(experiment)
     path = "../data/" + experiment + "/"
 
@@ -363,13 +368,14 @@ for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
             alpha=0.7,
             label="ensemble mean",
         )
-        ax.set_ylabel("PDF ensemble members", color="darkorange")
-        ax2.set_ylabel("PDF ensemble mean", color="darkgreen")
+        ax.set_ylabel("PDF ensemble members", color="darkorange", fontsize=12)
+        ax2.set_ylabel("PDF ensemble mean", color="darkgreen", fontsize=12)
 
         # fit Gaussian to histogram without significance screening
         if p_threshold == 100:
             mu, std = norm.fit(slopes)
             ax.plot(bins, norm.pdf(bins, mu, std), color="red")
+        add_letters(ax, letter_offset=letter_index)
         plt.tight_layout()
         plt.savefig(
             "../plots/"
