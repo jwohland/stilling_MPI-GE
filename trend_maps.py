@@ -153,7 +153,14 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
 # global mean timeseries
 # prep data
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
-ds_picontrol = open_picontrol()
+
+ds_list = [
+    ann_mean(xr.open_dataset(x, use_cftime=True))
+    for x in sorted(glob.glob("../data/pi-control/*.nc"))
+]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
+ds_picontrol = xr.concat(ds_list, dim="time")  # open_picontrol can not be used here because no spatial averaging applied
+
+
 onshore_mean = ds_picontrol.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
 
 # plotting
@@ -206,7 +213,7 @@ ax[0].text(
     ha="center",
     va="center",
 )
-
+add_letters(ax)
 plt.tight_layout()
 plt.savefig(
     "../plots/global_windspeeds.jpeg", dpi=300,
