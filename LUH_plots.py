@@ -135,7 +135,8 @@ for i_ref, reference_data in enumerate([ref, ref_end]):
     for tmp_ax in ax.flatten():
         tmp_ax.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
         tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
-    plt.subplots_adjust(0.01, 0.12, 0.99, 0.99)
+    add_letters(ax, x=-0.03, y=1.04)
+    plt.subplots_adjust(0.015, 0.12, 0.99, 0.99, 0.08, 0.08)
     if i_ref == 0:
         plt.savefig("../plots/LUH1/LUH_change_future.jpeg", dpi=300)
     else:
