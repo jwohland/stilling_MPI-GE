@@ -97,13 +97,13 @@ except FileNotFoundError:
 f, ax = plt.subplots(
     ncols=4,
     nrows=4,
-    figsize=(12, 8),
+    figsize=(9, 6),
     sharex=True,
     sharey=True,
     subplot_kw={"projection": ccrs.PlateCarree()},
 )
-cbar1_ax = f.add_axes([0.05, 0.08, 0.6, 0.02])
-cbar2_ax = f.add_axes([0.8, 0.08, 0.175, 0.02])
+cbar1_ax = f.add_axes([0.05, 0.11, 0.6, 0.02])
+cbar2_ax = f.add_axes([0.8, 0.11, 0.175, 0.02])
 
 for row, experiment in enumerate(ds_dict.keys()):
     plt.text(
@@ -161,12 +161,12 @@ for tmp_ax in ax.flatten():
     tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
 ax[0, 0].set_title(r"Full change $\Delta s$")
 ax[0, 1].set_title(r"Dynamical change $\Delta_{dyn} s$")
-ax[0, 2].set_title(r"Full minus dynamical $\Delta s - \Delta_{dyn} s$")
+ax[0, 2].set_title(r"Residual change $\Delta_{res} s$")
 ax[0, 3].set_title(r"Land use change")
 
-
-plt.subplots_adjust(0.04, 0.1, 0.99, 0.96)
-plt.savefig("../plots/attribution_maps.jpeg", dpi=300)
+add_letters(ax, x=-0.05, y=.98)
+plt.subplots_adjust(0.03, 0.14, 0.99, 0.96, 0.1, 0.1)
+plt.savefig("../plots/attribution_maps.jpeg", dpi=400)
 
 # compare onshore pdfs
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
