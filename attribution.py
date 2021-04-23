@@ -216,7 +216,7 @@ scatter plots
 
 lu_variable = "gothr+gsecd"
 for wind_type in ["abs", "rel"]:
-    f, ax = plt.subplots(nrows=4, sharex=True, sharey=True, figsize=(5, 10))
+    f, ax = plt.subplots(nrows=4, sharex=True, sharey=True, figsize=(4, 8))
     for row, experiment in enumerate(ds_dict.keys()):
         ds_wind = ds_dict[experiment]["Full - Dyn."]["sfcWind"].copy()
         if wind_type == "rel":
@@ -290,9 +290,10 @@ for wind_type in ["abs", "rel"]:
         [t.set_color("Purple") for t in ax2.yaxis.get_ticklabels()]
     # ax[3].set_xlim(xmin=-0.5, xmax=2)
     if wind_type == "abs":
-        ax[3].set_xlabel("Wind speed change [m/s]")
+        ax[3].set_xlabel("Residual wind speed change [m/s]")
     else:
-        ax[3].set_xlabel("Relative wind speed change [1]")
+        ax[3].set_xlabel("Relative residual wind speed change [1]")
+    add_letters(ax)
     plt.tight_layout()
     plt.savefig(
         "../plots/scatter/scatter_" + lu_variable + "_" + wind_type + ".jpeg", dpi=300,
