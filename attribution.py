@@ -1,5 +1,7 @@
 import matplotlib.cm as cm
 import warnings
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import xesmf as xe
@@ -46,7 +48,11 @@ slice_dic = {
     "rcp26": {"end": slice("2090", "2100"), "equiv": slice("1890", "1900")},
 }
 
-ref = ann_mean(xr.open_dataset("../data/historical/ensmean/sfcWind_Lmon_MPI-ESM_historical_ensmean_185001-200512.nc"))
+ref = ann_mean(
+    xr.open_dataset(
+        "../data/historical/ensmean/sfcWind_Lmon_MPI-ESM_historical_ensmean_185001-200512.nc"
+    )
+)
 ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
 
 try:
@@ -164,33 +170,43 @@ ax[0, 1].set_title(r"Dynamical change $\Delta_{dyn} s$")
 ax[0, 2].set_title(r"Residual change $\Delta_{res} s$")
 ax[0, 3].set_title(r"Land use change")
 
-add_letters(ax, x=-0.05, y=.98)
+add_letters(ax, x=-0.05, y=0.98)
 plt.subplots_adjust(0.03, 0.14, 0.99, 0.96, 0.1, 0.1)
 plt.savefig("../plots/attribution_maps.jpeg", dpi=400)
 
 # compare onshore pdfs
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
 colors = ["Orange", "Olive"]
-f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 10))
+f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 8))
+label_dict = {
+    "Full - Dyn.": r"Residual change $\Delta_{res} s$",
+    "Dyn. Diff": r"Dynamical change $\Delta_{dyn} s$",
+}
 for row, experiment in enumerate(ds_dict.keys()):
+    total_change = 0
     for i, var in enumerate(["Full - Dyn.", "Dyn. Diff"]):
         tmp_da = ds_dict[experiment][var]["sfcWind"]
         tmp_da = tmp_da.where(np.isfinite(landmask)).values
         ax[row].hist(
             tmp_da[np.isfinite(tmp_da)],
-            label=var,
+            label=label_dict[var],
             density=True,
             bins=100,
             alpha=0.7,
             color=colors[i],
         )
         ax[row].axvline(tmp_da[np.isfinite(tmp_da)].mean(), ls="--", color=colors[i])
+        total_change += tmp_da[np.isfinite(tmp_da)].mean()
+    ax[row].axvline(
+        total_change, ls="--", color="black", label=r"Full change $\Delta s$"
+    )
     ax[row].set_ylabel(experiment + " PDF")
-    ax[row].set_xlim(xmin=-1, xmax=1)
-ax[0].legend()
+    ax[row].set_xlim(xmin=-0.8, xmax=0.8)
+ax[0].legend(bbox_to_anchor=(1.03, 1.6))
 ax[3].set_xlabel("Wind speed change [m/s]")
-plt.tight_layout()
-plt.savefig("../plots/contribution_histograms.jpeg", dpi=300)
+add_letters(ax)
+plt.subplots_adjust(0.12, 0.06, 0.95, 0.89)
+plt.savefig("../plots/contribution_histograms.jpeg", dpi=400)
 
 
 """
