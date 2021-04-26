@@ -20,16 +20,6 @@ def quantile(da, q):
     return np.quantile(tmp, q)
 
 
-def count_quadrant(x, y):
-    """
-    count the number of occurences of
-        x > 0 and
-    :param x:
-    :param y:
-    :return:
-    """
-
-
 def conditional_prob(x, y, x_thr):
     joint_prob = y[(x > x_thr) & (y < 0)].size
     single_prob = y[x > x_thr].size
@@ -276,6 +266,7 @@ for wind_type in ["abs", "rel"]:
             -1, -0.2, str(q4) + "%", color="Darkorange", ha="center", va="center"
         )
         ax[row].legend(loc="upper right", markerscale=0)
+        ax[row].set_ylim(ymax=.99)
 
         # add conditional probability
         ax2 = ax[row].twinx()
@@ -290,7 +281,7 @@ for wind_type in ["abs", "rel"]:
         [t.set_color("Purple") for t in ax2.yaxis.get_ticklabels()]
     # ax[3].set_xlim(xmin=-0.5, xmax=2)
     if wind_type == "abs":
-        ax[3].set_xlabel("Residual wind speed change [m/s]")
+        ax[3].set_xlabel(r"Residual wind speed change $\Delta_{res}s$ [m/s]")
     else:
         ax[3].set_xlabel("Relative residual wind speed change [1]")
     add_letters(ax)
