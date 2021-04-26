@@ -1,6 +1,6 @@
 # MPI-GE wind stilling
 
-Code underlying analysis performed in TITLE NAME.
+Code underlying analysis performed in "Wind speed stilling and its recovery due to internal climate variability".
 
 
 ## Figure overview
