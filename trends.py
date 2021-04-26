@@ -189,7 +189,7 @@ plt.savefig("../plots/timeseries_picontrol_Europe.jpeg", dpi=300)
 Plot trend histograms
 """
 ds_list_HadISD = [
-    selHadISD(ann_mean(xr.open_dataset(x, use_cftime=True)))
+    selHadISD(annual_mean(xr.open_dataset(x, use_cftime=True)))
     for x in sorted(glob.glob("../data/pi-control/*.nc"))
 ]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
 ds_picontrol_HadISD = xr.concat(ds_list_HadISD, dim="time")
@@ -325,7 +325,7 @@ for letter_index, experiment in enumerate(["historical", "rcp26", "rcp45", "rcp8
 
     windfiles = sorted(glob.glob(path + "sfcWind*.nc"))
     ds = open_datasets(windfiles)
-    ds_ensmean = ann_mean(selbox(xr.open_dataset(glob.glob(path + "ensmean/*.nc")[0])))
+    ds_ensmean = annual_mean(selbox(xr.open_dataset(glob.glob(path + "ensmean/*.nc")[0])))
 
     ds_internal = ds - ds_ensmean
     for p_threshold in [5, 100]:

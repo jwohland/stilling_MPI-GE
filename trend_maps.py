@@ -37,7 +37,7 @@ for t_slice in [
     slice("1945", "1975"),
     slice("1975", "2005"),
 ]:
-    ds = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
+    ds = annual_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
     ds = sel_time(ds, t_slice)
 
     nt, nlat, nlon = ds["sfcWind"].values.shape
@@ -79,12 +79,12 @@ for t_slice in [
 
 
 # 10y mean maps
-ref = ann_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
+ref = annual_mean(xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0]))
 ref = sel_time(ref, slice("1850", "1859")).mean(dim="time")
 # historical & 1pCO2
 for experiment in ["historical", "1pCO2"]:
     for t_start in np.arange(1860, 2005, 10):
-        ds = ann_mean(
+        ds = annual_mean(
             xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
         )
         t_slice = slice(
@@ -118,7 +118,7 @@ for experiment in ["historical", "1pCO2"]:
 # future
 for experiment in ["rcp26", "rcp45", "rcp85"]:
     for t_start in np.arange(2010, 2100, 10):
-        ds = ann_mean(
+        ds = annual_mean(
             xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
         )
         t_slice = slice(
@@ -155,7 +155,7 @@ for experiment in ["rcp26", "rcp45", "rcp85"]:
 landmask = xr.open_dataarray("../data/runoff/landmask.nc")
 
 ds_list = [
-    ann_mean(xr.open_dataset(x, use_cftime=True))
+    annual_mean(xr.open_dataset(x, use_cftime=True))
     for x in sorted(glob.glob("../data/pi-control/*.nc"))
 ]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
 ds_picontrol = xr.concat(ds_list, dim="time")  # open_picontrol can not be used here because no spatial averaging applied
@@ -180,7 +180,7 @@ ax[0].legend(loc="lower left")
 ax[0].set_xlabel("PDF")
 
 for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
-    ds = ann_mean(
+    ds = annual_mean(
         xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
     )
     ds = ds.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])

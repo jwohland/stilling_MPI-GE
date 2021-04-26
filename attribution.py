@@ -48,7 +48,7 @@ slice_dic = {
     "rcp26": {"end": slice("2090", "2100"), "equiv": slice("1890", "1900")},
 }
 
-ref = ann_mean(
+ref = annual_mean(
     xr.open_dataset(
         "../data/historical/ensmean/sfcWind_Lmon_MPI-ESM_historical_ensmean_185001-200512.nc"
     )
@@ -60,12 +60,12 @@ try:
         ds_dict = pickle.load(handle)
 except FileNotFoundError:
     ds_dict = {}
-    ds_stylized = ann_mean(xr.open_dataset(glob.glob("../data/1pCO2/ensmean/*.nc")[0]))
+    ds_stylized = annual_mean(xr.open_dataset(glob.glob("../data/1pCO2/ensmean/*.nc")[0]))
     LUH_ref = open_LUH_period("../data/LUHa.v1/", 1850, 1860).mean(dim="time")
     for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
         ds_dict[experiment] = {}
         ds_tmp = (
-            ann_mean(
+            annual_mean(
                 xr.open_dataset(glob.glob("../data/" + experiment + "/ensmean/*.nc")[0])
             )
             .sel({"time": slice_dic[experiment]["end"]})

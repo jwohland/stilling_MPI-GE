@@ -20,7 +20,7 @@ def selbox(ds):
     return ds.sel({"lat": lats, "lon": lons}).mean(dim=["lat", "lon"])
 
 
-def ann_mean(ds):
+def annual_mean(ds):
     return ds.resample({"time": "1Y"}).mean()
 
 
@@ -30,7 +30,7 @@ def sel_time(ds, tslice):
 
 # MPI-GE
 def open_datasets(filelist):
-    ds = [ann_mean(selbox(xr.open_dataset(x, use_cftime=True))) for x in filelist]
+    ds = [annual_mean(selbox(xr.open_dataset(x, use_cftime=True))) for x in filelist]
     ds = xr.concat(
         ds,
         dim=pd.Index(name="ensemble_member", data=[x.split("_")[-2] for x in filelist]),
@@ -41,7 +41,7 @@ def open_datasets(filelist):
 def open_picontrol():
     path = "../data/pi-control/"
     ds_list = [
-        ann_mean(selbox(xr.open_dataset(x, use_cftime=True)))
+        annual_mean(selbox(xr.open_dataset(x, use_cftime=True)))
         for x in sorted(glob.glob(path + "*.nc"))
     ]  # use_cftime needed after 2200. Otherwise SerializationWarning is raised
     return xr.concat(ds_list, dim="time")
