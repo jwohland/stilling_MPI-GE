@@ -19,12 +19,13 @@ Fig. 8a | historical_wind_trends_Europe_5_all.jpeg | trends.py
 Fig. 8b | rcp26_wind_trends_Europe_5_all.jpeg  | trends.py
 Fig. 8c | rcp45_wind_trends_Europe_5_all.jpeg | trends.py
 Fig. 8d | rcp85_wind_trends_Europe_5_all.jpeg | trends.py
-Appendix Fig. A1|  LUH_change.jpeg | LUH_plots.py
-Appendix Fig. A2| box_timeseries_Europe.jpeg | ensmean_timeseries.py
-Appendix Fig. A3| picontrol_HadISD_wind_trends_Europe_5.jpeg | trends.py
-Appendix Fig. A4a | picontrol_wind_trends_Europe_5_15y.jpeg | trends.py
-Appendix Fig. A4b | Figs/picontrol_wind_trends_Europe_5_25y.jpeg | trends.py
-
+Appendix Fig. A1| box_timeseries_Europe.jpeg | ensmean_timeseries.py
+Appendix Fig. A2| picontrol_HadISD_wind_trends_Europe_5_20y.jpeg | trends.py
+Appendix Fig. A3a | picontrol_wind_trends_Europe_5_15y.jpeg | trends.py
+Appendix Fig. A3b | picontrol_wind_trends_Europe_5_25y.jpeg | trends.py
+Appendix Fig. A4a | picontrol_wind_trends_Europe_10_20y.jpeg | trends.py
+Appendix Fig. A4b | picontrol_wind_trends_Europe_15_20y.jpeg | trends.py
+Appendix Figs. 5-7 | {Model_name_picontrol_wind_trends_Europe_5.jpeg} | trends.py
 ## Other Files
 
 make_land_mask.py computes a land mask on the MPI grid using runoff data and excluding Antartica and Greenland. 
