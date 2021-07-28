@@ -200,7 +200,7 @@ for trend_length in [15, 20, 25]:
         "HadISD",
         "box",
     ]:  # HadISD is sensitivity test with data averaged to European HadISD stations
-        for p_threshold in [5, 100]:
+        for p_threshold in [5, 10, 15, 100]:
             if agg_type == "box":
                 ds_tmp = ds_picontrol.copy()
             else:
