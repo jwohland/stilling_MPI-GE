@@ -26,7 +26,7 @@ Appendix Fig. A4b | picontrol_wind_trends_Europe_15_20y.jpeg | trends.py:plot_tr
 Appendix Figs. 5-7 | CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg | trends.py:plot_pi_control_cmip6_trend_histograms
 
 
-All figures can be created at once by running the function `make_all_plots.py` from the command line:
+All figures can be created at once by running the function `make_all_plots.py` from the command line, assuming you are in the Anaconda environment given in this repository:
 
 ```bash
 python make_all_plots.py [data_path] [plots_path] [--cache_path]
@@ -37,9 +37,11 @@ Where directories for input data and output plots are user-defined (default `dat
 
 ## Other Files
 
-make_land_mask.py computes a land mask on the MPI grid using runoff data and excluding Antartica and Greenland. 
+`requirements.yaml` can be used to create an Anaconda environment with all the necessary packages to run the scripts in this repository.
 
-Lmon_Amon_diff.py verify that wind speed data provided in the modeling realm Atmosphere (Amon) and Land (Lmon) contain the same values. 
+`make_land_mask.py` computes a land mask on the MPI grid using runoff data and excluding Antartica and Greenland.
+
+`Lmon_Amon_diff.py` verify that wind speed data provided in the modeling realm Atmosphere (Amon) and Land (Lmon) contain the same values.
 
 ## Input data
 
