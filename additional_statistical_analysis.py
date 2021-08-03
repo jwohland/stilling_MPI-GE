@@ -1,7 +1,13 @@
-from utils import *
+# TODO: Is this file related to the paper any more?
+import glob
+
+import xarray as xr
 import numpy as np
 from scipy.signal import periodogram
 from scipy.stats import norm, pearsonr, anderson, kstest
+import matplotlib.pyplot as plt
+
+from utils import annual_mean, selbox
 
 path = "../data/pi-control/"
 ds_list = [

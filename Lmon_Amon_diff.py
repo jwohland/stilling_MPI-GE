@@ -5,12 +5,13 @@ Check here whether sfcWinds during historical period identical in Amon and Lmon
 
 """
 
-import xarray as xr
-import glob
+from utils import ensemble_mean_wind_speed
 
-ds_Lmon = xr.open_dataset(glob.glob("../data/historical/ensmean/*.nc")[0])
-ds_Amon = xr.open_dataset(glob.glob("../data/historical/Amon/ensmean/*.nc")[0])
 
-# Compare values because time steps offset by about half a month
-diff = ds_Amon["sfcWind"].values - ds_Lmon["sfcWind"].values
-assert (diff == 0).all()
+def test_historical_ensemble_mean_wind_speeds(path_to_data):
+    ds_Lmon = ensemble_mean_wind_speed(path_to_data, "historical")
+    ds_Amon = ensemble_mean_wind_speed(path_to_data, "historical/Amon")
+
+    # Compare values because time steps offset by about half a month
+    diff = ds_Amon["sfcWind"].values - ds_Lmon["sfcWind"].values
+    assert (diff == 0).all()
