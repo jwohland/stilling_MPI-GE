@@ -1,0 +1,5 @@
+# Data access instructions
+This directory contains land use data from the Land Use Harmonization (LUH) Project. It is accessible via https://luh.umd.edu/data.shtml#LUH1_Data. To populate this directory, download [the compressed LUHa.v1 file](http://gsweb1vh2.umd.edu/luh_data/LUHa.v1/LUHa.v1.tgz) and expand it into this directory.
+
+# Reference
+Hurtt, G.C., Chini, L.P., Frolking, S., Betts, R.A., Feddema, J., Fischer, G., Fisk, J.P., Hibbard, K., Houghton, R.A., Janetos, A., Jones, C.D., Kindermann, G., Kinoshita, T., Klein Goldewijk, K., Riahi, K., Shevliakova, E., Smith, S., Stehfest, E., Thomson, A., Thornton, P., van Vuuren, D.P., Wang, Y.P., 2011. Harmonization of land-use scenarios for the period 1500–2100: 600 years of global gridded annual land-use transitions, wood harvest, and resulting secondary lands. Climatic Change 109, 117–161. https://doi.org/10.1007/s10584-011-0153-2
