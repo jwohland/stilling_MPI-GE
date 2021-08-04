@@ -1,7 +1,9 @@
+import os
+import warnings
+
 from matplotlib import cm
 import matplotlib.pyplot as plt
 from utils import open_LUH_period, add_letters, sel_time
-import warnings
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=ImportWarning)
@@ -43,6 +45,7 @@ def plot_absolute_land_use_change(path_to_data, path_to_plots):
             ax[j, i].add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
 
     plt.tight_layout()
+    os.makedirs(f"{path_to_plots}/LUH1", exist_ok=True)
     plt.savefig(f"{path_to_plots}/LUH1/LUH_absolute.jpeg", dpi=300)
 
 
@@ -83,6 +86,7 @@ def plot_historical_LUH_change(path_to_data, path_to_plots):
         tmp_ax.add_feature(cartopy.feature.COASTLINE.with_scale("50m"), lw=0.2)
         tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
     plt.tight_layout()
+    os.makedirs(f"{path_to_plots}/LUH1", exist_ok=True)
     plt.savefig(f"{path_to_plots}/LUH1/LUH_change.jpeg", dpi=300)
 
 
@@ -114,7 +118,7 @@ def plot_future_LUH_change(path_to_data, path_to_plots):
         ):
             print(experiment)
             ds_future = open_LUH_period(
-                "{path_to_data}/LUHa.v1/{experiment}", 2090, 2100
+                f"{path_to_data}/LUHa.v1/{experiment}", 2090, 2100
             )
             diff = sel_time(ds_future, slice("2090", "2100")) - reference_data
 
@@ -149,6 +153,7 @@ def plot_future_LUH_change(path_to_data, path_to_plots):
             tmp_ax.add_feature(cartopy.feature.BORDERS.with_scale("50m"), lw=0.2)
         add_letters(ax, x=-0.03, y=1.04)
         plt.subplots_adjust(0.015, 0.12, 0.99, 0.99, 0.08, 0.08)
+        os.makedirs(f"{path_to_plots}/LUH1", exist_ok=True)
         if i_ref == 0:
             plt.savefig(f"{path_to_plots}/LUH1/LUH_change_future.jpeg", dpi=300)
         else:

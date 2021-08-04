@@ -14,3 +14,5 @@ dependencies:
     - rasterio
     - openpyxl
     - cdo
+    - netcdf4
+    - nc-time-axis>=1.20

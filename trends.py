@@ -1,5 +1,6 @@
 import warnings
 import glob
+import os
 
 from scipy.stats import linregress, norm
 import xarray as xr
@@ -135,7 +136,6 @@ def plot_histo(
     ax.text(-0.107, n.max() * 3.0 / 4, "Zeng et al. [2019] 1978 - 2003", textdic)
     ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
     ax.text(0.103, n.max() * 3.0 / 4, "Zeng et al. [2019] 2004 - 2017", textdic)
-    test_calc_frac_partoftrend()
     frac_partoftrend = calc_frac_partoftrend(slopes)
     # FIXME
     xlabel = f"Significant wind speed trends at {100 - p_threshold}% level [m/s/decade]"
@@ -209,6 +209,7 @@ def plot_full_timeseries_with_trend_marks(path_to_data, path_to_plots):
     ax.set_xlim(xmin=ds_picontrol.time[0].values, xmax=ds_picontrol.time[-1].values)
     plt.tight_layout()
     plt.savefig(f"{path_to_plots}/timeseries_picontrol_Europe.jpeg", dpi=300)
+    plt.close("all")
 
 
 def plot_trend_histograms(path_to_data, path_to_plots):
@@ -263,6 +264,7 @@ def plot_trend_histograms(path_to_data, path_to_plots):
                 else:
                     fig_path = f"{path_to_plots}/picontrol_HadISD_wind_trends_Europe_{p_threshold}_{trend_length}y.jpeg"
                 plt.savefig(fig_path, dpi=300)
+                plt.close("all")
 
 
 def plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots):
@@ -298,6 +300,7 @@ def plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots):
         )
         ax.set_ylabel("PDF")
         plt.tight_layout()
+        os.makedirs(f"{path_to_plots}/CMIP6", exist_ok=True)
         fig_path = f"{path_to_plots}/CMIP6/{model}_picontrol_wind_trends_Europe_{P_THRESHOLD}.jpeg"
         plt.savefig(fig_path, dpi=300)
         plt.close("all")
@@ -330,10 +333,12 @@ def plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots):
     ax.set_xlim(xmin=-0.2, xmax=0.2)
     add_letters(ax, letter_offset=1)
     plt.tight_layout()
+    os.makedirs(f"{path_to_plots}/CMIP6", exist_ok=True)
     fig_path = (
         f"{path_to_plots}/CMIP6/Ensmean_picontrol_wind_trends_Europe_{P_THRESHOLD}.jpeg"
     )
     plt.savefig(fig_path, dpi=300)
+    plt.close("all")
 
 
 def plot_experiment_trend_histograms(path_to_data, path_to_plots):
@@ -406,3 +411,4 @@ def plot_experiment_trend_histograms(path_to_data, path_to_plots):
             plt.tight_layout()
             fig_path = f"{path_to_plots}/{experiment}_wind_trends_Europe_{p_threshold}_all.jpeg"
             plt.savefig(fig_path, dpi=300)
+            plt.close("all")

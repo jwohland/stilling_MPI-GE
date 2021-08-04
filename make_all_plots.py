@@ -11,6 +11,7 @@ from LUH_plots import plot_future_LUH_change
 from trend_maps import plot_global_windspeeds
 from trends import (
     plot_full_timeseries_with_trend_marks,
+    test_calc_frac_partoftrend,
     plot_trend_histograms,
     plot_pi_control_cmip6_trend_histograms,
     plot_experiment_trend_histograms,
@@ -73,10 +74,13 @@ if __name__ == "__main__":
     # Fig. 6 | timeseries_picontrol_Europe.jpeg
     plot_full_timeseries_with_trend_marks(path_to_data, path_to_plots)
 
-    # Fig. 7a | picontrol_wind_trends_Europe_5_20y.jpeg
+    # Test to ensure the calculation of timesteps in a 20y trend is working as expected (used in next three plots)
+    test_calc_frac_partoftrend()
+
+    # Fig. 7a & Appendix Figs. A2, A3a-b, A4a-b | picontrol_wind_trends_Europe_5_20y.jpeg & picontrol_{HadISD|None}_wind_trends_Europe_{p_threshold}_{trend_length}.jpeg
     plot_trend_histograms(path_to_data, path_to_plots)
 
-    # Fig. 7b | CMIP6/Ensmean_picontrol_wind_trends_Europe_5.jpeg
+    # Fig. 7b & Appendix Figs. 5-7 | CMIP6/Ensmean_picontrol_wind_trends_Europe_5.jpeg & CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg
     plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots)
 
     # Figs. 8a-d | {experiment}_wind_trends_Europe_5_all.jpeg
@@ -84,9 +88,3 @@ if __name__ == "__main__":
 
     # Appendix Fig. A1| box_timeseries_Europe.jpeg
     plot_ensemble_members_timeseries(path_to_data, path_to_plots)
-
-    # Appendix Figs. A2, A3a-b, A4a-b| picontrol_{HadISD|None}_wind_trends_Europe_{p_threshold}_{trend_length}.jpeg
-    plot_trend_histograms(path_to_data, path_to_plots)
-
-    # Appendix Figs. 5-7 | CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg
-    plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots)

@@ -20,7 +20,7 @@ def plot_ensemble_members_timeseries(path_to_data, path_to_plots):
         ds_wind = open_datasets(
             sorted(glob.glob(f"{path_to_data}/{experiment}/sfcWind*.nc"))
         )
-        print("wind opened")
+        print("{experiment} wind opened")
 
         # plot 20y running means
         for ens_member in ds_wind.ensemble_member:

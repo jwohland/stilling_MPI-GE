@@ -155,7 +155,11 @@ def forest_perarea(ds, path_to_LUH1):
     :return:
     """
     # open constant forest/non-forest map
-    da_fnf = open_LUH(f"{path_to_LUH1}/fnf_map.txt", name="fnf")
+    if "fnf_map.txt" not in os.listdir(path_to_LUH1):
+        # If in an IAM result subdirectory, we need to look one directory above for the forest info
+        da_fnf = open_LUH(f"{path_to_LUH1}/../fnf_map.txt", name="fnf")
+    else:
+        da_fnf = open_LUH(f"{path_to_LUH1}/fnf_map.txt", name="fnf")
     return (ds["gothr"] + ds["gsecd"]) * da_fnf
 
 

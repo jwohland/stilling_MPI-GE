@@ -1,5 +1,6 @@
 # plot global map of wind speed trends over 1900 - 2010
 import warnings
+import os
 
 from scipy.stats import linregress
 import numpy as np
@@ -13,6 +14,7 @@ with warnings.catch_warnings():
     import cartopy.crs as ccrs
 
 from utils import (
+    annual_mean,
     ensemble_mean_wind_speed,
     reference_ensemble_mean_wind_speed,
     open_picontrol,
@@ -46,7 +48,8 @@ def plot_historical_trends(path_to_data, path_to_plots):
         slice("1975", "2005"),
     ]:
         ds = mean_sliced_annual_mean(
-            ensemble_mean_wind_speed(path_to_data, t_slice, mean_time=False)
+            ensemble_mean_wind_speed(path_to_data, "historical"),
+            t_slice, mean_time=False
         )
 
         nt, nlat, nlon = ds["sfcWind"].values.shape
@@ -78,6 +81,7 @@ def plot_historical_trends(path_to_data, path_to_plots):
             cmap=cm.get_cmap("RdBu_r"),
         )
         plt.tight_layout()
+        os.makedirs(f"{path_to_plots}/maps", exist_ok=True)
         fig_path = f"{path_to_plots}/maps/historical/historical_trends_{t_slice.start}_{t_slice.stop}.jpeg"
         plt.savefig(fig_path, dpi=300)
 
@@ -96,7 +100,10 @@ def plot_windspeed_maps(path_to_data, path_to_plots):
         for t_start in start_times:
             # slice includes first and last years, so this is a 10y period
             t_slice = slice(str(t_start), str(t_start + 9))
-            ds = mean_sliced_annual_mean(ensemble_mean_wind_speed(experiment), t_slice)
+            ds = mean_sliced_annual_mean(
+                ensemble_mean_wind_speed(path_to_data, experiment),
+                t_slice
+            )
             plt.close("all")
             plot_title = f"{experiment}\nDiff mean surface wind speed {t_slice.start} - {t_slice.stop} [m/s]"
             ax = plot_field(
@@ -107,6 +114,7 @@ def plot_windspeed_maps(path_to_data, path_to_plots):
                 vmin=-2,
             )
             plt.tight_layout()
+            os.makedirs(f"{path_to_plots}/maps", exist_ok=True)
             fig_path = f"{path_to_plots}/maps/{experiment}/map_windspeeds/{t_slice.start}_{t_slice.stop}.jpeg"
             plt.savefig(fig_path, dpi=300)
 
@@ -137,7 +145,7 @@ def plot_global_windspeeds(path_to_data, path_to_plots):
     ax[0].set_xlabel("PDF")
 
     for experiment in ["historical", "rcp26", "rcp45", "rcp85"]:
-        ds = ensemble_mean_wind_speed(experiment)
+        ds = annual_mean(ensemble_mean_wind_speed(path_to_data, experiment))
         ds = ds.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
         ds["sfcWind"].plot(ax=ax[1], label=experiment)
     ax[0].set_ylabel("Global mean onshore 10m wind speed [m/s]")

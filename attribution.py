@@ -1,6 +1,7 @@
 import warnings
 import pickle
 import glob
+import os
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -113,9 +114,9 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
             # TODO: save these as xarrays (which could even be packaged on zenodo)?
             # E.g. a dataset for wind speed info, with different components as dataarrays and experiments as a coordinate,
             # and then another dataset for LUH1 data
-            if path_to_cache is not None:
-                with open(f"{path_to_cache}/attribution_maps.pickle", "wb") as handle:
-                    pickle.dump(ds_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        if path_to_cache is not None:
+            with open(f"{path_to_cache}/attribution_maps.pickle", "wb") as handle:
+                pickle.dump(ds_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return ds_dict
 
@@ -337,5 +338,6 @@ def plot_luh_vs_wind_speed_scatter(
             ax[3].set_xlabel("Relative residual wind speed change [1]")
         add_letters(ax)
         plt.tight_layout()
+        os.makedirs(f"{path_to_plots}/scatter", exist_ok=True)
         fig_path = f"{path_to_plots}/scatter/scatter_{luh1_variable}_{wind_type}.jpeg"
         plt.savefig(fig_path, dpi=300)
