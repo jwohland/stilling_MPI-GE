@@ -1,6 +1,8 @@
-#!/usr/bin/env bash
+module load cdo
 
-ANNUALPATH="../CMIP6_annual/"
+cd /cluster/work/apatt/wojan/MPI-GE/data/CMIP6 || stop
+
+ANNUALPATH=/cluster/work/apatt/wojan/MPI-GE/data/CMIP6_annual/
 
 for model in *
 do
