@@ -118,7 +118,7 @@ def plot_future_LUH_change(path_to_data, path_to_plots):
         ):
             print(experiment)
             ds_future = open_LUH_period(
-                f"{path_to_data}/LUHa.v1/{experiment}", 2090, 2100
+                f"{path_to_data}/LUHa.v1", 2090, 2100, experiment
             )
             diff = sel_time(ds_future, slice("2090", "2100")) - reference_data
 
