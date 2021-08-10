@@ -15,4 +15,4 @@ dependencies:
     - openpyxl
     - cdo
     - netcdf4
-    - nc-time-axis>=1.20
+    - nc-time-axis>=1.2.0
