@@ -3,6 +3,7 @@ channels:
     - conda-forge
 dependencies:
     - python=3.8
+    - pip
     - matplotlib
     - numpy
     - xesmf
@@ -13,6 +14,7 @@ dependencies:
     - pandas
     - rasterio
     - openpyxl
-    - cdo
     - netcdf4
     - nc-time-axis>=1.2.0
+    - pip:
+        - cdo
