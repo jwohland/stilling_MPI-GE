@@ -24,13 +24,6 @@ from utils import (
 )
 
 
-def quantile(da, q):  # TODO: is this function even needed?
-    """Get quantile `q` of finite data in data array `da`"""
-    tmp = da.values
-    tmp = tmp[np.isfinite(tmp)]
-    return np.quantile(tmp, q)
-
-
 def conditional_prob(x, y, x_thr):
     """
     Calculate conditional probability that `y` is less than zero,
@@ -77,7 +70,7 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
         with open(f"{path_to_cache}/attribution_maps.pickle", "rb") as handle:
             ds_dict = pickle.load(handle)
     else:
-        # TODO: better name than 'ref'
+        # TODO: better name than 'ref' Jan: What is wrong with ref?
         ref = reference_ensemble_mean_wind_speed(path_to_data)
         ds_dict = {}
         CO2_ref = xr.open_dataset(glob.glob(path_to_1p_CO2)[0])
@@ -98,11 +91,11 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
                 mean_sliced_annual_mean(CO2_ref, experiment_params[experiment]["equiv"])
                 - ref
             )
-            # TODO: add comment on what is happening here
+            # Residual change (i.e., difference between full and dynamical change)
             ds_dict[experiment]["Full - Dyn."] = (
                 ds_dict[experiment]["Full Diff"] - ds_dict[experiment]["Dyn. Diff"]
             )
-            # TODO: add comment on what is happening here
+            # Change in land use forcing from LUH
             ds_dict[experiment]["LUH Diff"] = (
                 open_LUH_period(
                     experiment_params[experiment]["LUH1_path"],
@@ -112,6 +105,10 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
                 - LUH_ref
             )
             # TODO: save these as xarrays (which could even be packaged on zenodo)?
+            #  Jan: Two questions:
+            #  1) They are already stored as a dict of xarray objects which is equivalent to what you suggest, isn't it?
+            #  2) What's the thinking behind cherry picking these particular results for zenodo?
+            #
             # E.g. a dataset for wind speed info, with different components as dataarrays and experiments as a coordinate,
             # and then another dataset for LUH1 data
         if path_to_cache is not None:
@@ -255,7 +252,7 @@ def plot_luh_vs_wind_speed_scatter(
     scatter plots
     """
 
-    # TODO: better name than 'ref'
+    # TODO: better name than 'ref'. Jan: What is wrong with ref?
     ref = reference_ensemble_mean_wind_speed(path_to_data)
     luh1_variable = "gothr+gsecd"
     for wind_type in ["abs", "rel"]:
