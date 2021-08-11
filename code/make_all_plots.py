@@ -31,13 +31,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "data_path",
-        default="data",
+        default="../data",
         help="Path to data directory. If not an absolute path, will be assumed as relative to the directory in which `make_all_plots.py` is found.",
         type=make_abs_path,
     )
     parser.add_argument(
         "plots_path",
-        default="plots",
+        default="../plots",
         help="Path to plot output directory. If not an absolute path, will be assumed as relative to the directory in which `make_all_plots.py` is found.",
         type=make_abs_path,
     )
@@ -56,35 +56,35 @@ if __name__ == "__main__":
     # This data dictionary is used for Figs. 1-3
     data_dict = experiment_wind_speed_components_and_luh(path_to_data, path_to_cache)
 
-    # Fig. 1 | attribution_maps.jpeg
+    print("Producing Fig. 1 | attribution_maps.jpeg")
     plot_attribution_maps(data_dict, path_to_plots)
 
-    # Fig. 2 | contribution_histograms.jpeg
+    print("Producing Fig. 2 | contribution_histograms.jpeg")
     plot_onshore_contribution_histograms(data_dict, path_to_data, path_to_plots)
 
-    # Fig. 3 | scatter_gothr+gsecd_abs.jpeg
+    print("Producing Fig. 3 | scatter_gothr+gsecd_abs.jpeg")
     plot_luh_vs_wind_speed_scatter(data_dict, path_to_data, path_to_plots)
 
-    # Fig. 4 | LUH_change_future_ref2000.jpeg
+    print("Producing Fig. 4 | LUH_change_future_ref2000.jpeg")
     plot_future_LUH_change(path_to_data, path_to_plots)
 
-    # Fig. 5 | global_windspeeds.jpeg ()
+    print("Producing Fig. 5 | global_windspeeds.jpeg ()")
     plot_global_windspeeds(path_to_data, path_to_plots)
 
-    # Fig. 6 | timeseries_picontrol_Europe.jpeg
+    print("Producing Fig. 6 | timeseries_picontrol_Europe.jpeg")
     plot_full_timeseries_with_trend_marks(path_to_data, path_to_plots)
 
     # Test to ensure the calculation of timesteps in a 20y trend is working as expected (used in next three plots)
     test_calc_frac_partoftrend()
 
-    # Fig. 7a & Appendix Figs. A2, A3a-b, A4a-b | picontrol_wind_trends_Europe_5_20y.jpeg & picontrol_{HadISD|None}_wind_trends_Europe_{p_threshold}_{trend_length}.jpeg
+    print("Producing Fig. 7a & Appendix Figs. A2, A3a-b, A4a-b | picontrol_wind_trends_Europe_5_20y.jpeg & picontrol_{HadISD|None}_wind_trends_Europe_{p_threshold}_{trend_length}.jpeg")
     plot_trend_histograms(path_to_data, path_to_plots)
 
-    # Fig. 7b & Appendix Figs. 5-7 | CMIP6/Ensmean_picontrol_wind_trends_Europe_5.jpeg & CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg
+    print("Producing Fig. 7b & Appendix Figs. 5-7 | CMIP6/Ensmean_picontrol_wind_trends_Europe_5.jpeg & CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg")
     plot_pi_control_cmip6_trend_histograms(path_to_data, path_to_plots)
 
-    # Figs. 8a-d | {experiment}_wind_trends_Europe_5_all.jpeg
+    print("Producing Figs. 8a-d | {experiment}_wind_trends_Europe_5_all.jpeg")
     plot_experiment_trend_histograms(path_to_data, path_to_plots)
 
-    # Appendix Fig. A1| box_timeseries_Europe.jpeg
+    print("Producing Appendix Fig. A1| box_timeseries_Europe.jpeg")
     plot_ensemble_members_timeseries(path_to_data, path_to_plots)

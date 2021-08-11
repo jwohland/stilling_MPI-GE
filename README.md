@@ -32,10 +32,11 @@ Appendix Figs. 5-7 | CMIP6/{Model_name}_picontrol_wind_trends_Europe_5.jpeg | tr
 All figures can be created at once by running the function `make_all_plots.py` from the command line, assuming you are in the Anaconda environment given in this repository:
 
 ```bash
+cd code
 python make_all_plots.py [data_path] [plots_path] [--cache_path]
 ```
 
-Where directories for input data and output plots are user-defined (default `data` and `plots`).
+Where directories for input data and output plots are user-defined (default `../data` and `../plots` from the `code` directory).
 `--cache_path` can be also defined to store some intermediate processed data.
 
 `requirements.yaml` can be used to create an Anaconda environment with all the necessary packages to run the scripts in this repository (including the command line tool `cdo`).

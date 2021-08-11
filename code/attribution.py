@@ -19,8 +19,7 @@ from utils import (
     add_letters,
     mean_sliced_annual_mean,
     open_LUH_period,
-    reference_ensemble_mean_wind_speed,
-    open_landmask,
+    reference_ensemble_mean_wind_speed
 )
 
 
@@ -70,7 +69,6 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
         with open(f"{path_to_cache}/attribution_maps.pickle", "rb") as handle:
             ds_dict = pickle.load(handle)
     else:
-        # TODO: better name than 'ref' Jan: What is wrong with ref?
         ref = reference_ensemble_mean_wind_speed(path_to_data)
         ds_dict = {}
         CO2_ref = xr.open_dataset(glob.glob(path_to_1p_CO2)[0])
@@ -105,13 +103,6 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
                 ).mean(dim="time")
                 - LUH_ref
             )
-            # TODO: save these as xarrays (which could even be packaged on zenodo)?
-            #  Jan: Two questions:
-            #  1) They are already stored as a dict of xarray objects which is equivalent to what you suggest, isn't it?
-            #  2) What's the thinking behind cherry picking these particular results for zenodo?
-            #
-            # E.g. a dataset for wind speed info, with different components as dataarrays and experiments as a coordinate,
-            # and then another dataset for LUH1 data
         if path_to_cache is not None:
             with open(f"{path_to_cache}/attribution_maps.pickle", "wb") as handle:
                 pickle.dump(ds_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -209,7 +200,7 @@ def plot_onshore_contribution_histograms(
     wind_speed_components_and_luh_dict, path_to_data, path_to_plots
 ):
     # compare onshore pdfs
-    landmask = open_landmask(path_to_data)
+    landmask = xr.open_dataarray(f"{path_to_data}/runoff/landmask.nc")
     colors = ["Orange", "Olive"]
     f, ax = plt.subplots(nrows=4, sharex=True, figsize=(4, 8))
     label_dict = {
@@ -253,7 +244,6 @@ def plot_luh_vs_wind_speed_scatter(
     scatter plots
     """
 
-    # TODO: better name than 'ref'. Jan: What is wrong with ref?
     ref = reference_ensemble_mean_wind_speed(path_to_data)
     luh1_variable = "gothr+gsecd"
     for wind_type in ["abs", "rel"]:

@@ -39,7 +39,7 @@ def selHadISD(ds, path_to_data):
     """
     # load HadISD station list and limit to region of interest
     station_list = pd.read_excel(
-        f"{path_to_data}/HadISD/Supplementary Data 2. Wind records from HadISD.xlsx",
+        f"{path_to_data}/HadISD/Zeng_SIData2_HadISDv202.xlsx",
         usecols=["lons", "lats"], sheet_name="stations"
     )
     station_list = station_list.where(

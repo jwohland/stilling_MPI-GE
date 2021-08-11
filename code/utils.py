@@ -5,8 +5,6 @@ import os
 import xarray as xr
 import pandas as pd
 
-from make_land_mask import create_landmask
-
 """
 European bounding box
 """
@@ -186,9 +184,3 @@ def add_letters(ax, x=-0.08, y=1.02, fs=10, letter_offset=0):
             transform=ax.transAxes,
             fontsize=fs,
         )
-
-
-def open_landmask(path_to_data):
-    if "landmask.nc" not in os.listdir(f"{path_to_data}/runoff"):
-        create_landmask(path_to_data)
-    return xr.open_dataarray(f"{path_to_data}/runoff/landmask.nc")

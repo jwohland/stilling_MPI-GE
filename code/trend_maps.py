@@ -19,7 +19,6 @@ from utils import (
     reference_ensemble_mean_wind_speed,
     open_picontrol,
     mean_sliced_annual_mean,
-    open_landmask,
     add_letters,
 )
 
@@ -123,7 +122,7 @@ def plot_global_windspeeds(path_to_data, path_to_plots):
     # global mean timeseries
 
     # prep data
-    landmask = open_landmask(path_to_data)
+    landmask = xr.open_dataarray(f"{path_to_data}/runoff/landmask.nc")
     ds_picontrol = open_picontrol(path_to_data, spatial_averaging=False)
 
     onshore_mean = ds_picontrol.where(np.isfinite(landmask)).mean(dim=["lat", "lon"])
