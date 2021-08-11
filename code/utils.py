@@ -107,7 +107,7 @@ def open_LUH(filename, year=None, name=None):
     return da
 
 
-def open_LUH_period(path_to_LUH1, ts, te):
+def open_LUH_period(path_to_LUH1, ts, te, path_to_experiment="."):
     """
     open time varying primary and secondary vegeation maps and combine them in a single xarray Dataset
     :param path: path to data
@@ -115,23 +115,16 @@ def open_LUH_period(path_to_LUH1, ts, te):
     :param te: end year for respective experiment, e.g. 2000 for historical
     :return:
     """
-    path_to_data = f"{path_to_LUH1}/updated_states/{{indicator}}.{{year}}.txt"
-    luh_arrays = []
-    for indicator in ["gothr", "gsecd"]:
-        luh_arrays.append(
-            xr.concat(
-                [
-                    open_LUH(
-                        path_to_data.format(indicator=indicator, year=year),
-                        year,
-                        indicator,
-                    )
-                    for year in range(ts, te)
-                ],
-                dim="time",
-            )
-        )
-    ds = xr.merge(luh_arrays)
+    path_to_data = f"{path_to_LUH1}/{path_to_experiment}/updated_states/{{indicator}}.{{year}}.txt"
+
+    ds = xr.merge([
+        xr.concat([
+            open_LUH(path_to_data.format(indicator=indicator, year=year), year, indicator)
+            for year in range(ts, te)
+        ], dim="time")
+        for indicator in ["gothr", "gsecd"]
+    ])
+
     ds["forest"] = forest_perarea(ds, path_to_LUH1)
     ds["gothr+gsecd"] = ds["gothr"] + ds["gsecd"]
     return ds
@@ -155,11 +148,7 @@ def forest_perarea(ds, path_to_LUH1):
     :return:
     """
     # open constant forest/non-forest map
-    if "fnf_map.txt" not in os.listdir(path_to_LUH1):
-        # If in an IAM result subdirectory, we need to look one directory above for the forest info
-        da_fnf = open_LUH(f"{path_to_LUH1}/../fnf_map.txt", name="fnf")
-    else:
-        da_fnf = open_LUH(f"{path_to_LUH1}/fnf_map.txt", name="fnf")
+    da_fnf = open_LUH(f"{path_to_LUH1}/fnf_map.txt", name="fnf")
     return (ds["gothr"] + ds["gsecd"]) * da_fnf
 
 

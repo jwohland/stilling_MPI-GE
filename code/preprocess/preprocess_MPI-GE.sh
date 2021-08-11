@@ -1,6 +1,6 @@
-module load cdo
-
-cd /cluster/work/apatt/wojan/MPI-GE/data || stop
+# First argument to the
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+cd "$script_dir/../../data" || stop
 
 for scenario in 1pCO2 historical rcp26 rcp45 rcp85
 do

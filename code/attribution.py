@@ -46,22 +46,22 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
         "historical": {
             "end": slice("1990", "2000"),
             "equiv": slice("1880", "1890"),
-            "LUH1_path": f"{path_to_LUH1}",
+            "LUH1_experiment": ".",
         },
         "rcp85": {
             "end": slice("2090", "2100"),
             "equiv": slice("1970", "1980"),
-            "LUH1_path": f"{path_to_LUH1}/MESSAGE_rcp85",
+            "LUH1_experiment": "MESSAGE_rcp85",
         },
         "rcp45": {
             "end": slice("2090", "2100"),
             "equiv": slice("1910", "1920"),
-            "LUH1_path": f"{path_to_LUH1}/MiniCAM_rcp45",
+            "LUH1_experiment": "MiniCAM_rcp45",
         },
         "rcp26": {
             "end": slice("2090", "2100"),
             "equiv": slice("1890", "1900"),
-            "LUH1_path": f"{path_to_LUH1}/IMAGE_rcp26",
+            "LUH1_experiment": "IMAGE_rcp26",
         },
     }
     if path_to_cache is not None and "attribution_maps.pickle" in os.listdir(
@@ -98,9 +98,10 @@ def experiment_wind_speed_components_and_luh(path_to_data, path_to_cache=None):
             # Change in land use forcing from LUH
             ds_dict[experiment]["LUH Diff"] = (
                 open_LUH_period(
-                    experiment_params[experiment]["LUH1_path"],
+                    path_to_LUH1,
                     int(experiment_params[experiment]["end"].start),
                     int(experiment_params[experiment]["end"].stop),
+                    experiment_params[experiment]["LUH1_experiment"]
                 ).mean(dim="time")
                 - LUH_ref
             )
