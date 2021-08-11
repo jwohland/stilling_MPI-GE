@@ -56,7 +56,15 @@ def selHadISD(ds, path_to_data):
 
 
 def slope_if_significant(y, p_threshold=P_THRESHOLD, trend_length=20):
-    # TODO: docstring
+    """
+    Calculates the slope by fitting a linear trend of length trend_length to the timeseries y.
+    If the slope is not statistically significant at the p-values provided
+    as p_threhold, the function returns nan.
+    :param y:
+    :param p_threshold:
+    :param trend_length:
+    :return:
+    """
     p_threshold = p_threshold / 100  # from percentage to fraction
     res = linregress(np.arange(trend_length) / 10, y)
     if res[3] < p_threshold:
@@ -115,7 +123,18 @@ def plot_histo(
     trend_length=20,
     p_threshold=P_THRESHOLD,
 ):
-    # TODO: docstring
+    """
+    Plots histogram of wind speed trends that are significant at a given p value threshold
+    along with the observation-based estimates taken from earlier studies.
+    :param slopes:
+    :param ax:
+    :param experiment:
+    :param full_output:
+    :param bins:
+    :param trend_length:
+    :param p_threshold:
+    :return:
+    """
     n, bins, patches = ax.hist(
         slopes[np.isfinite(slopes)],
         bins=bins,
@@ -137,7 +156,6 @@ def plot_histo(
     ax.axvline(x=0.11, color="purple", ls="--")  # from SI Fig. 4e
     ax.text(0.103, n.max() * 3.0 / 4, "Zeng et al. [2019] 2004 - 2017", textdic)
     frac_partoftrend = calc_frac_partoftrend(slopes)
-    # FIXME
     xlabel = f"Significant wind speed trends at {100 - p_threshold}% level [m/s/decade]"
     ax.set_xlabel(xlabel, fontsize=12)
     plot_title = f"{experiment}: {int(frac_partoftrend)}% of years belong to a {trend_length}y trend period"
@@ -149,7 +167,14 @@ def plot_histo(
 
 
 def plot_full_timeseries_with_trend_marks(path_to_data, path_to_plots):
-    # TODO: docstring
+    """
+    Plots annual and 20y running-mean wind speed timeseries during pre-industrial control.
+    Markers or red and blue color denote onsets of significant 20y trend periods.
+    A map of the considered domain is added.
+    :param path_to_data:
+    :param path_to_plots:
+    :return:
+    """
     # plot full timeseries and mark trends
     ds_picontrol = open_picontrol(path_to_data)
 
@@ -213,9 +238,15 @@ def plot_full_timeseries_with_trend_marks(path_to_data, path_to_plots):
 
 
 def plot_trend_histograms(path_to_data, path_to_plots):
-    # TODO: docstring
     """
-    Plot trend histograms
+    Plots trend histograms for different combinations of
+        - trend lengths (15, 20, 25 years)
+        - aggregation types (box average or interpolated to HadISD station locations)
+        - significance levels (p values of 0.05, 0.1, 0.15, 1)
+    A Gaussian is fitted to those plots where no significance screening is applied (i.e. p=1)
+    :param path_to_data:
+    :param path_to_plots:
+    :return:
     """
     ds_picontrol = open_picontrol(path_to_data)
     ds_list_HadISD = [
@@ -373,10 +404,6 @@ def plot_experiment_trend_histograms(path_to_data, path_to_plots):
                     ]
                 )
             slopes = np.asarray(slopes)
-            # FIXME: frac_trends isn't used - should it be?
-            frac_trends = np.round(
-                slopes[np.isfinite(slopes)].size / (da_internal.size - 20) * 100
-            )
 
             # calculate trend slopes in ensemble mean
             slopes_ensmean = np.asarray(
