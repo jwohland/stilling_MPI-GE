@@ -41,7 +41,7 @@ Where directories for input data and output plots are user-defined (default `../
 
 `requirements.yaml` can be used to create an Anaconda environment with all the necessary packages to run the scripts in this repository (including the command line tool `cdo`).
 ## Input data
-Executing scripts from this repository requires (a) downloading of the required input data and (b) preprocessing the data, and (c) updating the file paths.
+Executing scripts from this repository requires (a) downloading of the required input data and (b) preprocessing the data.
 
 ### a) Downloads
 To download the input, please follow the structure and recommendations given in the `data` subdirectories.
