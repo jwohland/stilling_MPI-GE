@@ -1,8 +1,7 @@
-module load cdo
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+cd "$script_dir/../../data/CMIP6" || stop
 
-cd /cluster/work/apatt/wojan/MPI-GE/data/CMIP6 || stop
-
-ANNUALPATH=/cluster/work/apatt/wojan/MPI-GE/data/CMIP6_annual/
+ANNUALPATH="$script_dir/../../data/CMIP6_annual"
 
 for model in *
 do
