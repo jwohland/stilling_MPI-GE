@@ -1,5 +1,7 @@
 # MPI-GE wind stilling
 
+[![article DOI](https://img.shields.io/badge/article-10.5194/esd--2021--29-blue)](https://doi.org/10.5194/esd-2021-29)
+
 Code underlying analysis performed in
 
 Wohland, J., Folini, D., Pickering, B., 2021. Wind speed stilling and its recovery due to internal climate variability. Earth System Dynamics. https://doi.org/10.5194/esd-2021-29
