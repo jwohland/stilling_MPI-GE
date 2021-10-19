@@ -2,7 +2,9 @@
 
 Code underlying analysis performed in
 
-Wohland, J., Folini, D., Pickering, B., 2021. Wind speed stilling and its recovery due to internal climate variability (preprint). Under review for Earth System Dynamics. https://doi.org/10.5194/esd-2021-29
+Wohland, J., Folini, D., Pickering, B., 2021. Wind speed stilling and its recovery due to internal climate variability. Earth System Dynamics. https://doi.org/10.5194/esd-2021-29
+
+If you content of this repository or code derived from it in academic work, please cite the above publication.
 
 ## Figure overview
 
